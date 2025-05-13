@@ -29,8 +29,8 @@ export const adminItems: SidebarItemType[] = [
   { title: "Đơn hàng", icon: ShoppingCart, path: "/admin/orders", badge: "5", color: "text-orange-600" },
   { title: "Sản phẩm", icon: Package, path: "/admin/products", color: "text-green-600" },
   { title: "Khách hàng", icon: Users, path: "/admin/users", color: "text-red-600" },
-  { title: "Phân tích", icon: BarChart, path: "/admin/analytics", color: "text-cyan-600" },
-  { title: "Hóa đơn", icon: FileText, path: "/admin/invoices", color: "text-gray-600" },
+  { title: "Bình luận", icon: BarChart, path: "/admin/analytics", color: "text-cyan-600" },
+  { title: "Voucher", icon: FileText, path: "/admin/invoices", color: "text-gray-600" },
 ];
 
 export const adminManagementItems: SidebarItemType[] = [
