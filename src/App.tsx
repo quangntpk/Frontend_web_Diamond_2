@@ -2,11 +2,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import AdminLayout from "@/components/layout/AdminLayout";
 import UserLayout from "@/components/layout/UserLayout";
-
+import { useEffect } from "react";
+import { useToast } from "@/hooks/use-toast"; 
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ProductList from "./pages/products/ProductList";
@@ -43,13 +44,71 @@ import AdminStaff from "./pages/admin/AdminStaff";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminInvoices from "./pages/admin/AdminInvoices";
 
+const GoogleCallbackHandler = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    console.log("GoogleCallbackHandler useEffect triggered. Location:", location);
+    console.log("location.search:", location.search);
+
+    const searchParams = new URLSearchParams(location.search);
+    console.log("searchParams:", searchParams.toString());
+
+    const token = searchParams.get("token");
+    const userId = searchParams.get("userId");
+    const email = searchParams.get("email");
+    const name = searchParams.get("name");
+    const role = parseInt(searchParams.get("role"), 10);
+
+    console.log("Google Callback in App:", { token, userId, email, name, role });
+
+    if (token && userId) {
+      // Lưu vào localStorage
+      localStorage.setItem("token", token);
+      localStorage.setItem("userId", userId);
+      localStorage.setItem("user", JSON.stringify({
+        maNguoiDung: userId,
+        email,
+        hoTen: name,
+        vaiTro: role,
+      }));
+
+      console.log("Data saved to localStorage:", {
+        token: localStorage.getItem("token"),
+        userId: localStorage.getItem("userId"),
+        user: localStorage.getItem("user"),
+      });
+
+      // Phát sự kiện tùy chỉnh để thông báo rằng localStorage đã thay đổi
+      window.dispatchEvent(new Event("storageChange"));
+
+      toast({
+        title: "Đăng nhập Google thành công 🎉",
+        description: "Chào mừng bạn quay trở lại!",
+        duration: 3000,
+        className: "bg-green-500 text-white border border-green-700 shadow-lg",
+      });
+
+      navigate(location.pathname, { replace: true });
+      navigate(role === 1 ? "/admin" : "/");
+    } else {
+      console.log("No query string present");
+    }
+  }, [location.search, navigate, toast]);
+
+  return null;
+};
+
 const queryClient = new QueryClient();
 
 const App = () => (
   <BrowserRouter>
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
+      <TooltipProvider>        
         <AppShell>
+            <GoogleCallbackHandler />
           <Routes>
             <Route path="/" element={<UserLayout />}>
               <Route index element={<Index />} />
