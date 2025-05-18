@@ -111,7 +111,7 @@ const Contact = () => {
         ReCaptchaToken: captchaToken,
       };
 
-      const response = await fetch(`${API_URL}/LienHe`, {
+      const response = await fetch(`${API_URL}/api/LienHe`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

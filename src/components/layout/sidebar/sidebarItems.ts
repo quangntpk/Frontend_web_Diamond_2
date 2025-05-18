@@ -44,7 +44,7 @@ export const adminManagementItems: SidebarItemType[] = [
 
 export const supportItems: SidebarItemType[] = [
   { title: "Cài đặt", icon: Settings, path: "/admin/settings", color: "text-gray-600" },
-  { title: "Trung tâm hỗ trợ", icon: HelpCircle, path: "/admin/help", color: "text-blue-600" },
+  { title: "Liên hệ", icon: HelpCircle, path: "/admin/contact", color: "text-blue-600" },
   { title: "Yêu thích", icon: Heart, path: "/admin/favorites", color: "text-red-600" },
   { title: "Trang web", icon: Globe, path: "/admin/website", color: "text-green-600" },
   { title: "Bảo mật", icon: Shield, path: "/admin/security", color: "text-purple-600" },
