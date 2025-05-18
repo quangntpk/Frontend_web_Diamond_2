@@ -29,7 +29,7 @@ import ViewProfile from "./pages/user/ViewProfile";
 import Messages from "./pages/user/Messages";
 import StaffDashboard from "./pages/staff/StaffDashboard";
 import StaffProducts from "./pages/staff/StaffProducts";
-import StaffOrders from "./pages/staff/StaffOrders";
+import StaffOrders from "./pages/admin/AdminOrders";
 import StaffInventory from "./pages/staff/StaffInventory";
 import InventoryForm from "./pages/staff/InventoryForm";
 import PurchaseOrdersForm from "./pages/staff/PurchaseOrdersForm";
