@@ -1,8 +1,10 @@
-import { useState, useRef, useEffect } from "react";
-import { useLocation, Link, Outlet } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useLocation, Link, Outlet, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useToast } from "@/components/ui/use-toast";
+import axios from "axios";
 import {
   Menu,
   ShoppingCart,
@@ -37,18 +39,13 @@ import {
 } from "@/components/ui/drawer";
 
 const UserLayout = () => {
-  const [userRole, setUserRole] = useState<"guest" | "user" | "staff" | "admin">("guest");
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement | null>(null);
+  const menuRef = useRef(null);
   const location = useLocation();
   const isMobile = useIsMobile();
-
-  const cycleUserRole = () => {
-    if (userRole === "guest") setUserRole("user");
-    else if (userRole === "user") setUserRole("staff");
-    else if (userRole === "staff") setUserRole("admin");
-    else setUserRole("guest");
-  };
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const navLinks = [
     { title: "Trang chủ", path: "/", icon: <LayoutGrid className="h-5 w-5" /> },
@@ -58,17 +55,64 @@ const UserLayout = () => {
     { title: "Liên hệ", path: "/contact", icon: <Mail className="h-5 w-5" /> },
   ];
 
+  // Lắng nghe sự kiện storageChange để cập nhật trạng thái đăng nhập
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+    const handleStorageChange = () => {
+      setIsLoggedIn(!!localStorage.getItem("token"));
+    };
+    window.addEventListener("storageChange", handleStorageChange);
+    return () => window.removeEventListener("storageChange", handleStorageChange);
+  }, []);
+
+  // Xử lý click ngoài menu để đóng
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
         setIsUserMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Xử lý đăng xuất
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        "http://localhost:5261/api/XacThuc/DangXuat",
+        {},
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      );
+    } catch (error) {
+      console.error("Logout error:", error.response?.data?.message || error.message);
+    }
+
+    // Thông báo đăng xuất cho parent window (nếu cần)
+    window.parent.postMessage({ type: "LOGOUT" }, "http://localhost:8080");
+
+    // Xóa thông tin người dùng
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("user");
+    setIsLoggedIn(false);
+    window.dispatchEvent(new Event("storageChange"));
+
+    // Hiển thị thông báo
+    toast({
+      title: "Đăng xuất thành công 🎉",
+      description: "Bạn đã đăng xuất khỏi tài khoản.",
+      duration: 3000,
+      className: "bg-green-500 text-white border border-green-700 shadow-lg",
+      action: (
+        <Button variant="outline" className="bg-white text-green-500 hover:bg-green-100 border-green-500">
+          Đóng
+        </Button>
+      ),
+    });
+
+    navigate("/auth/login");
+    setIsUserMenuOpen(false);
+  };
 
   return (
     <>
@@ -127,11 +171,53 @@ const UserLayout = () => {
                         </Link>
                       </DrawerClose>
                     ))}
+                    {isLoggedIn && (
+                      <>
+                        <DrawerClose asChild>
+                          <Link
+                            to="/user/profile"
+                            className={cn(
+                              "flex items-center gap-2 px-4 py-3 rounded-md",
+                              location.pathname === "/user/profile"
+                                ? "bg-crocus-100 text-crocus-700 font-medium"
+                                : "text-gray-600"
+                            )}
+                          >
+                            <UserCircle className="h-5 w-5" />
+                            <span>Hồ sơ</span>
+                          </Link>
+                        </DrawerClose>
+                        <DrawerClose asChild>
+                          <Link
+                            to="/user/orders"
+                            className={cn(
+                              "flex items-center gap-2 px-4 py-3 rounded-md",
+                              location.pathname === "/user/orders"
+                                ? "bg-crocus-100 text-crocus-700 font-medium"
+                                : "text-gray-600"
+                            )}
+                          >
+                            <Package className="h-5 w-5" />
+                            <span>Đơn hàng</span>
+                          </Link>
+                        </DrawerClose>
+                        <DrawerClose asChild>
+                          <Button
+                            variant="ghost"
+                            className="flex items-center gap-2 px-4 py-3 text-red-600"
+                            onClick={handleLogout}
+                          >
+                            <LogOut className="h-5 w-5" />
+                            <span>Đăng xuất</span>
+                          </Button>
+                        </DrawerClose>
+                      </>
+                    )}
                   </div>
                 </div>
               </DrawerContent>
             </Drawer>
-            {userRole === "user" && (
+            {isLoggedIn && (
               <>
                 <Link
                   to="/favorites"
@@ -165,13 +251,7 @@ const UserLayout = () => {
                 </Link>
               </>
             )}
-            {userRole === "guest" ? (
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/auth/login">
-                  <LogIn className="h-4 w-4 mr-2" /> Đăng nhập
-                </Link>
-              </Button>
-            ) : (
+            {isLoggedIn ? (
               <div className="relative">
                 <Button
                   variant="ghost"
@@ -190,6 +270,7 @@ const UserLayout = () => {
                       <Link
                         to="/user/profile"
                         className="flex items-center text-gray-700 hover:text-crocus-600"
+                        onClick={() => setIsUserMenuOpen(false)}
                       >
                         <UserCircle className="h-5 w-5 mr-2" />
                         <span>Hồ sơ</span>
@@ -197,6 +278,7 @@ const UserLayout = () => {
                       <Link
                         to="/user/orders"
                         className="flex items-center text-gray-700 hover:text-crocus-600"
+                        onClick={() => setIsUserMenuOpen(false)}
                       >
                         <Package className="h-5 w-5 mr-2" />
                         <span>Đơn hàng</span>
@@ -205,7 +287,7 @@ const UserLayout = () => {
                         variant="ghost"
                         size="sm"
                         className="w-full text-red-600 flex items-center justify-start"
-                        onClick={() => setIsUserMenuOpen(false)}
+                        onClick={handleLogout}
                       >
                         <LogOut className="h-4 w-4 mr-2" />
                         Đăng xuất
@@ -214,6 +296,12 @@ const UserLayout = () => {
                   </div>
                 )}
               </div>
+            ) : (
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/auth/login">
+                  <LogIn className="h-4 w-4 mr-2" /> Đăng nhập
+                </Link>
+              </Button>
             )}
           </div>
         </div>
