@@ -36,7 +36,7 @@ export const adminItems: SidebarItemType[] = [
 export const adminManagementItems: SidebarItemType[] = [
   { title: "Thanh toán", icon: CreditCard, path: "/admin/payments", color: "text-yellow-600" },
   { title: "Tiếp thị", icon: Megaphone, path: "/admin/marketing", color: "text-pink-600" },
-  { title: "Tin nhắn", icon: MessageSquare, path: "/admin/messages", color: "text-blue-600" },
+  { title: "Blog", icon: MessageSquare, path: "/admin/blog", color: "text-blue-600" },
   { title: "Trò chuyện", icon: MessageSquare, path: "/admin/chat", color: "text-teal-600" },
   { title: "Lịch", icon: Calendar, path: "/admin/calendar", color: "text-green-600" },
   { title: "Báo cáo", icon: BarChart, path: "/admin/reports", color: "text-cyan-600" },

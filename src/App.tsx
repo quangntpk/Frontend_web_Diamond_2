@@ -44,6 +44,7 @@ import AdminStaff from "./pages/admin/AdminStaff";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminInvoices from "./pages/admin/AdminInvoices";
 import AdminContact from "./pages/admin/AdminContact";
+import AdminBlog from "./pages/admin/AdminBlog"
 
 const GoogleCallbackHandler = () => {
   const location = useLocation();
@@ -155,6 +156,7 @@ const App = () => (
               <Route path="orders" element={<StaffOrders />} />
               <Route path="inventory" element={<StaffInventory />} />
               <Route path="invoices" element={<AdminInvoices />} />
+              <Route path="blog" element={<AdminBlog />} />
               <Route path="inventory/form" element={<InventoryForm />} />
               <Route path="purchase-orders/form" element={<PurchaseOrdersForm />} />
               <Route path="products/form" element={<ProductsForm />} />
