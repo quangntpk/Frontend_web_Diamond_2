@@ -1,121 +1,365 @@
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { 
+import { Heart, ShoppingCart } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import {
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { Heart, ShoppingCart, Package } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { BlogCard } from "@/components/blogs/BlogCard";
-import { useState } from "react";
 import { CartItem } from "@/types/cart";
-import { toast } from "@/hooks/use-toast";
 
-const featuredProducts = [
-  {
-    id: 1,
-    name: "Váy lụa Crocus",
-    price: 59.99,
-    image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
-    rating: 4.5,
-    isFavorite: false,
-    sizes: ["XS", "S", "M", "L", "XL"],
-    colors: ["Tím", "Đen", "Trắng"],
-    description: "Váy lụa sang trọng với màu tím Crocus đặc trưng."
-  },
-  {
-    id: 2,
-    name: "Áo thun Crocus",
-    price: 29.99,
-    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
-    rating: 4.8,
-    isFavorite: true,
-    sizes: ["S", "M", "L", "XL"],
-    colors: ["Tím", "Xám", "Trắng"],
-    description: "Áo thun thoải mái hàng ngày với thiết kế Crocus tinh tế."
-  },
-  {
-    id: 3,
-    name: "Áo khoác Crocus",
-    price: 89.99,
-    image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04",
-    rating: 4.7,
-    isFavorite: false,
-    sizes: ["S", "M", "L"],
-    colors: ["Xanh navy", "Đen"],
-    description: "Áo khoác tinh tế với lớp lót lấy cảm hứng từ Crocus."
-  },
-  {
-    id: 4,
-    name: "Bộ sưu tập Denim Crocus",
-    price: 49.99,
-    image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901",
-    rating: 4.6,
-    isFavorite: false,
-    sizes: ["XS", "S", "M", "L", "XL"],
-    colors: ["Xanh nhạt", "Xanh đậm", "Đen"],
-    description: "Denim cao cấp với đường may màu Crocus."
-  },
-  {
-    id: 5,
-    name: "Trang phục mùa hè Crocus",
-    price: 39.99,
-    image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
-    rating: 4.2,
-    isFavorite: true,
-    sizes: ["S", "M", "L"],
-    colors: ["Tím Crocus", "Trắng", "Be"],
-    description: "Trang phục nhẹ nhàng hoàn hảo cho những ngày hè ấm áp."
-  },
-  {
-    id: 6,
-    name: "Bộ sưu tập mùa đông Crocus",
-    price: 69.99,
-    image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5",
-    rating: 4.3,
-    isFavorite: false,
-    sizes: ["M", "L", "XL"],
-    colors: ["Tím", "Trắng", "Xám"],
-    description: "Giữ ấm và phong cách với bộ sưu tập mùa đông của chúng tôi."
-  },
-];
+// Định nghĩa interface cho dữ liệu từ API (Products)
+interface ApiProduct {
+  id: string;
+  name: string;
+  thuongHieu: string;
+  loaiSanPham: string;
+  kichThuoc: string[];
+  soLuong: number;
+  donGia: number;
+  moTa: string | null;
+  chatLieu: string;
+  mauSac: string[];
+  hinh: string[];
+  ngayTao: string;
+  trangThai: number;
+  soLuongDaBan: number;
+  hot: boolean;
+}
 
-const trendingCombos = [
-  {
-    id: 1,
-    name: "Bộ trang phục hè Crocus",
-    price: 129.99,
-    image: "https://images.unsplash.com/photo-1531297484001-80022131f5a1",
-    rating: 4.8,
-    products: [1, 2, 5],
-    isFavorite: true,
-    description: "Bộ trang phục hè hoàn chỉnh với các mảnh phối hợp."
-  },
-  {
-    id: 2,
-    name: "Trang phục công sở Crocus",
-    price: 159.99,
-    image: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81",
-    rating: 4.6,
-    products: [3, 4, 6],
-    isFavorite: false,
-    description: "Những món đồ thiết yếu cho tủ quần áo chuyên nghiệp."
-  },
-  {
-    id: 3,
-    name: "Trang phục cuối tuần Crocus",
-    price: 99.99,
-    image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c",
-    rating: 4.7,
-    products: [2, 4, 5],
-    isFavorite: false,
-    description: "Những mảnh thoải mái hoàn hảo cho hoạt động cuối tuần."
-  },
-];
+// Định nghĩa interface cho dữ liệu từ API (Combos)
+interface ApiComboSanPham {
+  idSanPham: string;
+  name: string;
+  thuongHieu: string;
+  loaiSanPham: string;
+  kichThuoc: string[];
+  soLuong: number;
+  donGia: number;
+  moTa: string | null;
+  chatLieu: string;
+  mauSac: string[];
+  hinh: string[];
+  ngayTao: string;
+  trangThai: number;
+}
 
+interface ApiCombo {
+  maCombo: number;
+  name: string;
+  hinhAnh: string;
+  ngayTao: string;
+  trangThai: number;
+  sanPhams: ApiComboSanPham[];
+  moTa: string;
+  gia: number;
+  soLuong: number;
+}
+
+// Interface cho Product
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  imageSrc: string;
+  price: number;
+  sizes: string[];
+  colors: string[];
+  rating: number;
+  isFavorite: boolean;
+  hot: boolean;
+}
+
+// Interface cho Combo
+interface Combo {
+  id: number;
+  name: string;
+  description: string;
+  imageSrc: string;
+  price: number;
+  products: string[];
+  rating: number;
+  isFavorite: boolean;
+}
+
+const formatter = new Intl.NumberFormat("vi-VN", {
+  style: "currency",
+  currency: "VND",
+});
+
+// Component cho ProductCard
+const ProductCard = ({ product, index }: { product: Product; index: number }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(product.isFavorite);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const toggleFavorite = () => {
+    setIsFavorite(!isFavorite);
+    toast({
+      title: isFavorite ? "Đã xóa khỏi yêu thích" : "Đã thêm vào yêu thích",
+      description: `${product.name} đã được ${isFavorite ? "xóa khỏi" : "thêm vào"} danh sách yêu thích.`,
+    });
+  };
+
+  const handleBuyNow = () => {
+    const cartItem: CartItem = {
+      id: parseInt(product.id), // Convert string ID to number
+      name: product.name,
+      image: product.imageSrc,
+      price: product.price,
+      quantity: 1,
+      type: "product",
+    };
+    console.log("Đã thêm vào giỏ hàng:", cartItem);
+    toast({
+      title: "Đã thêm vào giỏ hàng",
+      description: `${product.name} đã được thêm vào giỏ hàng của bạn.`,
+    });
+  };
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        "group relative transition-all duration-700 ease-out",
+        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+      )}
+      style={{ transitionDelay: `${index * 150}ms` }}
+    >
+      <Card className="overflow-hidden group">
+        <div className="relative aspect-square">
+          <Link to={`/products/${product.id}`}>
+            <img
+              src={
+                product.imageSrc
+                  ? `data:image/jpeg;base64,${product.imageSrc}`
+                  : "/placeholder-image.jpg"
+              }
+              alt={product.name}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          </Link>
+          {product.hot && (
+            <Badge className="absolute top-2 left-2 bg-red-500 text-white">
+              Đang bán chạy
+            </Badge>
+          )}
+          <button
+            onClick={toggleFavorite}
+            className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 hover:bg-white transition-colors"
+          >
+            <Heart
+              className={`h-5 w-5 ${isFavorite ? "fill-red-500 text-red-500" : "text-gray-600"}`}
+            />
+          </button>
+        </div>
+        <CardContent className="p-4">
+          <Link to={`/products/${product.id}`}>
+            <h3 className="font-medium hover:text-crocus-600 transition-colors">{product.name}</h3>
+          </Link>
+          <div className="flex justify-between items-center mt-2">
+            <p className="font-semibold">{formatter.format(product.price)}</p>
+            <div className="flex space-x-1">
+              {[...Array(5)].map((_, i) => (
+                <svg
+                  key={i}
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill={i < Math.floor(product.rating) ? "currentColor" : "none"}
+                  stroke={i < Math.floor(product.rating) ? "none" : "currentColor"}
+                  className={`w-4 h-4 ${i < Math.floor(product.rating) ? "text-yellow-400" : "text-gray-300"}`}
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              ))}
+            </div>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-1">
+            {product.colors.slice(0, 3).map((color) => (
+              <span key={color} className="inline-block px-2 py-1 text-xs bg-gray-100 rounded-full">
+                {color}
+              </span>
+            ))}
+          </div>
+          <div className="mt-2 flex flex-wrap gap-1">
+            {product.sizes.slice(0, 3).map((size) => (
+              <span key={size} className="inline-block px-2 py-1 text-xs bg-gray-100 rounded-full">
+                {size}
+              </span>
+            ))}
+          </div>
+          <div className="mt-4 flex gap-2">
+            <Button asChild variant="outline" size="sm" className="flex-1">
+              <Link to={`/products/${product.id}`}>Chi tiết</Link>
+            </Button>
+            <Button
+              size="sm"
+              className="flex-1 bg-crocus-500 hover:bg-crocus-600"
+              onClick={handleBuyNow}
+            >
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              Mua ngay
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// Component cho ComboCard
+const ComboCard = ({ combo, index }: { combo: Combo; index: number }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(combo.isFavorite);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const handleBuyNow = () => {
+    const cartItem: CartItem = {
+      id: combo.id, // Already a number
+      name: combo.name,
+      image: combo.imageSrc,
+      price: combo.price,
+      quantity: 1,
+      type: "combo",
+    };
+    console.log("Đã thêm vào giỏ hàng:", cartItem);
+    toast({
+      title: "Đã thêm vào giỏ hàng",
+      description: `${combo.name} đã được thêm vào giỏ hàng của bạn.`,
+    });
+  };
+
+  const toggleFavorite = () => {
+    setIsFavorite(!isFavorite);
+    toast({
+      title: isFavorite ? "Đã xóa khỏi yêu thích" : "Đã thêm vào yêu thích",
+      description: `${combo.name} đã được ${isFavorite ? "xóa khỏi" : "thêm vào"} danh sách yêu thích.`,
+    });
+  };
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        "group relative transition-all duration-700 ease-out",
+        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+      )}
+      style={{ transitionDelay: `${index * 150}ms` }}
+    >
+      <Card className="overflow-hidden group">
+        <div className="relative aspect-video bg-gray-100">
+          <Link to={`/combos/${combo.id}`}>
+            <img
+              src={
+                combo.imageSrc
+                  ? `data:image/jpeg;base64,${combo.imageSrc}`
+                  : "/placeholder-image.jpg"
+              }
+              alt={combo.name}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          </Link>
+          <button
+            onClick={toggleFavorite}
+            className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 hover:bg-white transition-colors"
+          >
+            <Heart
+              className={`h-5 w-5 ${isFavorite ? "fill-red-500 text-red-500" : "text-gray-600"}`}
+            />
+          </button>
+        </div>
+        <CardContent className="p-4">
+          <Link to={`/combos/${combo.id}`}>
+            <h3 className="font-medium hover:text-crocus-600 transition-colors">{combo.name}</h3>
+          </Link>
+          <div className="flex justify-between items-center mt-1">
+            <p className="font-semibold">{formatter.format(combo.price)}</p>
+            <div className="flex space-x-1">
+              {[...Array(5)].map((_, i) => (
+                <svg
+                  key={i}
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill={i < Math.floor(combo.rating) ? "currentColor" : "none"}
+                  stroke={i < Math.floor(combo.rating) ? "none" : "currentColor"}
+                  className={`w-4 h-4 ${i < Math.floor(combo.rating) ? "text-yellow-400" : "text-gray-300"}`}
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              ))}
+            </div>
+          </div>
+          <div className="mt-4 flex gap-2">
+            <Button asChild variant="outline" size="sm" className="flex-1">
+              <Link to={`/combos/${combo.id}`}>Chi tiết</Link>
+            </Button>
+            <Button
+              size="sm"
+              className="flex-1 bg-crocus-500 hover:bg-crocus-600"
+              onClick={handleBuyNow}
+            >
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              Mua ngay
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// Blog data (unchanged)
 const featuredBlogs = [
   {
     id: "1",
@@ -125,7 +369,7 @@ const featuredBlogs = [
     date: "15 tháng 4, 2025",
     author: "Emma Johnson",
     authorImage: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=60&h=60",
-    category: "sản phẩm"
+    category: "sản phẩm",
   },
   {
     id: "2",
@@ -135,7 +379,7 @@ const featuredBlogs = [
     date: "10 tháng 4, 2025",
     author: "Michael Chen",
     authorImage: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=60&h=60",
-    category: "sản phẩm"
+    category: "sản phẩm",
   },
   {
     id: "3",
@@ -145,46 +389,87 @@ const featuredBlogs = [
     date: "5 tháng 4, 2025",
     author: "Sophia Rodriguez",
     authorImage: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=60&h=60",
-    category: "combo"
+    category: "combo",
   },
 ];
 
 const Index = () => {
-  const [selectedSize, setSelectedSize] = useState<string>("");
-  const [selectedColor, setSelectedColor] = useState<string>("");
-  const [quickViewProduct, setQuickViewProduct] = useState<number | null>(null);
-  const [quickViewCombo, setQuickViewCombo] = useState<number | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [combos, setCombos] = useState<Combo[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [loadingCombos, setLoadingCombos] = useState(true);
+  const [errorProducts, setErrorProducts] = useState<string | null>(null);
+  const [errorCombos, setErrorCombos] = useState<string | null>(null);
 
-  const addToCart = (item: any, type: "sản phẩm" | "combo") => {
-    const cartItem: CartItem = {
+  const transformProductApiData = (apiData: ApiProduct[]): Product[] => {
+    return apiData.map((item) => ({
       id: item.id,
       name: item.name,
-      image: item.image,
-      price: item.price,
-      quantity: 1,
-      type: type === "sản phẩm" ? "product" : "combo"
-    };
-    
-    if (type === "sản phẩm" && selectedSize) {
-      cartItem.size = selectedSize;
-    }
-    
-    if (type === "sản phẩm" && selectedColor) {
-      cartItem.color = selectedColor;
-    }
-    
-    console.log("Đã thêm vào giỏ hàng:", cartItem);
-    
-    toast({
-      title: "Đã thêm vào giỏ hàng",
-      description: `${item.name} đã được thêm vào giỏ hàng của bạn.`,
-    });
-    
-    setSelectedSize("");
-    setSelectedColor("");
-    setQuickViewProduct(null);
-    setQuickViewCombo(null);
+      description: item.moTa || `Thương hiệu: ${item.thuongHieu} <br/> Chất liệu: ${item.chatLieu}`,
+      imageSrc: item.hinh[0] || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23f1f5f9'/%3E%3C/svg%3E",
+      price: item.donGia,
+      sizes: item.kichThuoc,
+      colors: item.mauSac,
+      rating: 4 + Math.random() * 0.9, // Random rating for demo
+      isFavorite: false,
+      hot: item.hot,
+    }));
   };
+
+  const transformComboApiData = (apiData: ApiCombo[]): Combo[] => {
+    return apiData.map((item) => ({
+      id: item.maCombo,
+      name: item.name || "Không có tên",
+      description: item.moTa || "Không có mô tả",
+      imageSrc: item.hinhAnh || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23f1f5f9'/%3E%3C/svg%3E",
+      price: item.gia || 0,
+      products: Array.isArray(item.sanPhams) ? item.sanPhams.map((p) => p.name || "Không có tên") : [],
+      rating: 4 + Math.random() * 0.9, // Random rating for demo
+      isFavorite: false,
+    }));
+  };
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoadingProducts(true);
+        const response = await fetch("http://localhost:5261/api/SanPham/ListSanPham");
+        if (!response.ok) {
+          throw new Error("Failed to fetch products");
+        }
+        const data: ApiProduct[] = await response.json();
+        const transformedProducts = transformProductApiData(data);
+        setProducts(transformedProducts);
+      } catch (err) {
+        setErrorProducts(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+
+    const fetchCombos = async () => {
+      try {
+        setLoadingCombos(true);
+        const response = await fetch("http://localhost:5261/api/Combo/ComboSanPhamView");
+        if (!response.ok) {
+          throw new Error("Failed to fetch combos");
+        }
+        const data = await response.json();
+        if (!Array.isArray(data)) {
+          throw new Error("API response is not an array");
+        }
+        const transformedCombos = transformComboApiData(data);
+        setCombos(transformedCombos);
+      } catch (err) {
+        setErrorCombos(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        setLoadingCombos(false);
+      }
+    };
+
+    fetchProducts();
+    fetchCombos();
+  }, []);
 
   return (
     <div className="space-y-16 py-6">
@@ -193,10 +478,15 @@ const Index = () => {
         <div className="bg-gradient-to-r from-crocus-500/20 to-crocus-200/40 rounded-xl p-8 md:p-16 flex flex-col md:flex-row items-center">
           <div className="md:w-1/2 space-y-6 text-center md:text-left">
             <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-              Khám phá bộ sưu tập <span className="bg-gradient-to-r from-crocus-500 to-crocus-700 bg-clip-text text-transparent">FashionHub</span> 2025
+              Khám phá bộ sưu tập{" "}
+              <span className="bg-gradient-to-r from-crocus-500 to-crocus-700 bg-clip-text text-transparent">
+                FashionHub
+              </span>{" "}
+              2025
             </h1>
             <p className="text-lg text-gray-700 max-w-lg">
-              Nâng tầm phong cách của bạn với sản phẩm hot nhất năm 2025. Bộ sưu tập mới của chúng tôi kết hợp sự thanh lịch với thiết kế đương đại.
+              Nâng tầm phong cách của bạn với sản phẩm hot nhất năm 2025. Bộ sưu tập mới của chúng
+              tôi kết hợp sự thanh lịch với thiết kế đương đại.
             </p>
             <div className="flex flex-wrap gap-4 justify-center md:justify-start">
               <Button asChild className="bg-crocus-500 hover:bg-crocus-600">
@@ -216,18 +506,22 @@ const Index = () => {
           <div className="md:w-1/2 mt-8 md:mt-0">
             <Carousel className="w-full">
               <CarouselContent>
-                {trendingCombos.map((combo) => (
+                {combos.map((combo) => (
                   <CarouselItem key={combo.id} className="md:basis-1/1">
                     <Link to={`/combos/${combo.id}`}>
                       <div className="relative rounded-lg overflow-hidden">
-                        <img 
-                          src={combo.image} 
-                          alt={combo.name} 
+                        <img
+                          src={
+                            combo.imageSrc
+                              ? `data:image/jpeg;base64,${combo.imageSrc}`
+                              : "/placeholder-image.jpg"
+                          }
+                          alt={combo.name}
                           className="w-full h-[300px] object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-4">
                           <h3 className="text-xl text-white font-semibold">{combo.name}</h3>
-                          <p className="text-white/80">${combo.price}</p>
+                          <p className="text-white/80">{formatter.format(combo.price)}</p>
                         </div>
                       </div>
                     </Link>
@@ -240,331 +534,150 @@ const Index = () => {
           </div>
         </div>
       </section>
-      
+
       {/* Features */}
       <section className="py-12">
         <h2 className="text-3xl font-bold text-center mb-12">Tại sao chọn FashionHub</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center">
             <div className="w-12 h-12 bg-crocus-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6 text-crocus-600">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                className="w-6 h-6 text-crocus-600"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             </div>
             <h3 className="text-xl font-semibold mb-2">Chất lượng cao cấp</h3>
-            <p className="text-gray-600">Được làm từ những chất liệu tốt nhất cho sự thoải mái và độ bền</p>
+            <p className="text-gray-600">
+              Được làm từ những chất liệu tốt nhất cho sự thoải mái và độ bền
+            </p>
           </div>
-          
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center">
             <div className="w-12 h-12 bg-crocus-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6 text-crocus-600">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                className="w-6 h-6 text-crocus-600"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
             <h3 className="text-xl font-semibold mb-2">Giao hàng nhanh</h3>
             <p className="text-gray-600">Vận chuyển nhanh chóng và đổi trả dễ dàng cho tất cả đơn hàng</p>
           </div>
-          
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center">
             <div className="w-12 h-12 bg-crocus-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6 text-crocus-600">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                className="w-6 h-6 text-crocus-600"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                />
               </svg>
             </div>
             <h3 className="text-xl font-semibold mb-2">Thời trang bền vững</h3>
-            <p className="text-gray-600">Quy trình và vật liệu thân thiện với môi trường cho một hành tinh tốt đẹp hơn</p>
+            <p className="text-gray-600">
+              Quy trình và vật liệu thân thiện với môi trường cho một hành tinh tốt đẹp hơn
+            </p>
           </div>
         </div>
       </section>
-      
+
       {/* Featured Products */}
       <section className="py-12">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold">Sản phẩm</h2>
           <Button asChild variant="link" className="text-crocus-600">
-            <Link to="/products">Xem tất cả <span aria-hidden="true">→</span></Link>
+            <Link to="/products">
+              Xem tất cả <span aria-hidden="true">→</span>
+            </Link>
           </Button>
         </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {featuredProducts.map((product) => (
-            <div key={product.id} className="group relative">
-              <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                <Link to={`/products/${product.id}`}>
-                  <img 
-                    src={product.image} 
-                    alt={product.name} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </Link>
-                <div className="absolute top-2 right-2 flex flex-col gap-2">
-                  <button 
-                    className="p-1.5 rounded-full bg-white/80 hover:bg-white transition-colors"
-                    aria-label={product.isFavorite ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
-                  >
-                    <Heart className={`h-5 w-5 ${product.isFavorite ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
-                  </button>
-                  <button
-                    className="p-1.5 rounded-full bg-white/80 hover:bg-white transition-colors"
-                    aria-label="Xem nhanh"
-                    onClick={() => setQuickViewProduct(product.id)}
-                  >
-                    <Package className="h-5 w-5 text-gray-600" />
-                  </button>
-                </div>
-              </div>
-              <div className="mt-3">
-                <Link to={`/products/${product.id}`} className="hover:text-crocus-600 transition-colors">
-                  <h3 className="font-medium">{product.name}</h3>
-                </Link>
-                <div className="flex justify-between items-center mt-1">
-                  <p className="text-gray-800">${product.price.toFixed(2)}</p>
-                  <div className="flex space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <svg 
-                        key={i} 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        viewBox="0 0 24 24" 
-                        fill={i < Math.floor(product.rating) ? "currentColor" : "none"}
-                        stroke={i < Math.floor(product.rating) ? "none" : "currentColor"}
-                        className={`w-4 h-4 ${i < Math.floor(product.rating) ? "text-yellow-400" : "text-gray-300"}`}
-                      >
-                        <path 
-                          fillRule="evenodd" 
-                          d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" 
-                          clipRule="evenodd" 
-                        />
-                      </svg>
-                    ))}
-                  </div>
-                </div>
-                
-<Button asChild className="w-full mt-3 bg-crocus-500 hover:bg-crocus-600">
-  <Link to={`/products/${product.id}`}>
-    <ShoppingCart className="h-4 w-4 mr-2" /> Xem chi tiết
-  </Link>
-</Button>
-              </div>
-              
-              {quickViewProduct === product.id && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-                  <Card className="w-full max-w-md overflow-hidden">
-                    <div className="relative">
-                      <button 
-                        onClick={() => setQuickViewProduct(null)}
-                        className="absolute top-2 right-2 p-1 rounded-full bg-white/80 hover:bg-white"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                      <img 
-                        src={product.image} 
-                        alt={product.name} 
-                        className="w-full h-48 object-cover"
-                      />
-                    </div>
-                    <CardContent className="p-6">
-                      <h3 className="text-xl font-bold mb-2">{product.name}</h3>
-                      <p className="text-lg font-semibold mb-4">${product.price.toFixed(2)}</p>
-                      <p className="text-gray-600 mb-4">{product.description}</p>
-                      
-                      <div className="space-y-4">
-                        {product.sizes && (
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Kích cỡ</label>
-                            <div className="flex flex-wrap gap-2">
-                              {product.sizes.map((size) => (
-                                <button
-                                  key={size}
-                                  className={`px-3 py-1 border rounded-md text-sm ${
-                                    selectedSize === size 
-                                      ? "border-crocus-500 bg-crocus-50 text-crocus-700" 
-                                      : "border-gray-300 hover:border-gray-400"
-                                  }`}
-                                  onClick={() => setSelectedSize(size)}
-                                >
-                                  {size}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        
-                        {product.colors && (
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Màu sắc</label>
-                            <div className="flex flex-wrap gap-2">
-                              {product.colors.map((color) => (
-                                <button
-                                  key={color}
-                                  className={`px-3 py-1 border rounded-md text-sm ${
-                                    selectedColor === color 
-                                      ? "border-crocus-500 bg-crocus-50 text-crocus-700" 
-                                      : "border-gray-300 hover:border-gray-400"
-                                  }`}
-                                  onClick={() => setSelectedColor(color)}
-                                >
-                                  {color}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        
-                        <Button 
-                          className="w-full mt-4 bg-crocus-500 hover:bg-crocus-600"
-                          onClick={() => addToCart(product, "sản phẩm")}
-                          disabled={product.sizes && !selectedSize}
-                        >
-                          <ShoppingCart className="h-4 w-4 mr-2" /> Thêm vào giỏ hàng
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+
+        {loadingProducts ? (
+          <div className="text-center">Đang tải sản phẩm...</div>
+        ) : errorProducts ? (
+          <div className="text-center text-red-500">Lỗi: {errorProducts}</div>
+        ) : (
+          <Carousel className="w-full">
+            <CarouselContent>
+              {products.map((product, index) => (
+                <CarouselItem key={product.id} className="md:basis-1/2 lg:basis-1/4">
+                  <ProductCard product={product} index={index} />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="left-2" />
+            <CarouselNext className="right-2" />
+          </Carousel>
+        )}
       </section>
-      
+
       {/* Trending Combos */}
       <section className="py-12">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold">Combo</h2>
           <Button asChild variant="link" className="text-crocus-600">
-            <Link to="/combos">Xem tất cả <span aria-hidden="true">→</span></Link>
+            <Link to="/combos">
+              Xem tất cả <span aria-hidden="true">→</span>
+            </Link>
           </Button>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {trendingCombos.map((combo) => (
-            <div key={combo.id} className="group relative">
-              <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                <Link to={`/combos/${combo.id}`}>
-                  <img 
-                    src={combo.image} 
-                    alt={combo.name} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </Link>
-                <div className="absolute top-2 right-2 flex flex-col gap-2">
-                  <button 
-                    className="p-1.5 rounded-full bg-white/80 hover:bg-white transition-colors"
-                    aria-label={combo.isFavorite ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
-                  >
-                    <Heart className={`h-5 w-5 ${combo.isFavorite ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
-                  </button>
-                  <button
-                    className="p-1.5 rounded-full bg-white/80 hover:bg-white transition-colors"
-                    aria-label="Xem nhanh"
-                    onClick={() => setQuickViewCombo(combo.id)}
-                  >
-                    <Package className="h-5 w-5 text-gray-600" />
-                  </button>
-                </div>
-              </div>
-              <div className="mt-3">
-                <Link to={`/combos/${combo.id}`} className="hover:text-crocus-600 transition-colors">
-                  <h3 className="font-medium">{combo.name}</h3>
-                </Link>
-                <div className="flex justify-between items-center mt-1">
-                  <p className="text-gray-800">${combo.price.toFixed(2)}</p>
-                  <div className="flex space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <svg 
-                        key={i} 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        viewBox="0 0 24 24" 
-                        fill={i < Math.floor(combo.rating) ? "currentColor" : "none"}
-                        stroke={i < Math.floor(combo.rating) ? "none" : "currentColor"}
-                        className={`w-4 h-4 ${i < Math.floor(combo.rating) ? "text-yellow-400" : "text-gray-300"}`}
-                      >
-                        <path 
-                          fillRule="evenodd" 
-                          d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" 
-                          clipRule="evenodd" 
-                        />
-                      </svg>
-                    ))}
-                  </div>
-                </div>
-                
-                <Button 
-                  className="w-full mt-3 bg-crocus-500 hover:bg-crocus-600"
-                  onClick={() => setQuickViewCombo(combo.id)}
-                >
-                  <ShoppingCart className="h-4 w-4 mr-2" /> Mua nhanh
-                </Button>
-              </div>
-              
-              {quickViewCombo === combo.id && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-                  <Card className="w-full max-w-md overflow-hidden">
-                    <div className="relative">
-                      <button 
-                        onClick={() => setQuickViewCombo(null)}
-                        className="absolute top-2 right-2 p-1 rounded-full bg-white/80 hover:bg-white"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                      <img 
-                        src={combo.image} 
-                        alt={combo.name} 
-                        className="w-full h-48 object-cover"
-                      />
-                    </div>
-                    <CardContent className="p-6">
-                      <h3 className="text-xl font-bold mb-2">{combo.name}</h3>
-                      <p className="text-lg font-semibold mb-4">${combo.price.toFixed(2)}</p>
-                      <p className="text-gray-600 mb-4">{combo.description}</p>
-                      
-                      <div className="mb-4">
-                        <h4 className="text-sm font-medium text-gray-700 mb-2">Bao gồm trong combo này:</h4>
-                        <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600">
-                          {combo.products.map((productId) => {
-                            const product = featuredProducts.find(p => p.id === productId);
-                            return product ? (
-                              <li key={productId}>{product.name}</li>
-                            ) : null;
-                          })}
-                        </ul>
-                      </div>
-                      
-                      <Button 
-                        className="w-full mt-4 bg-crocus-500 hover:bg-crocus-600"
-                        onClick={() => addToCart(combo, "combo")}
-                      >
-                        <ShoppingCart className="h-4 w-4 mr-2" /> Thêm combo vào giỏ hàng
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+
+        {loadingCombos ? (
+          <div className="text-center">Đang tải combo...</div>
+        ) : errorCombos ? (
+          <div className="text-center text-red-500">Lỗi: {errorCombos}</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {combos.map((combo, index) => (
+              <ComboCard key={combo.id} combo={combo} index={index} />
+            ))}
+          </div>
+        )}
       </section>
-      
-      {/* Featured Blog Posts */}
+
+      {/* Featured Blog Posts
       <section className="py-12">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold">Bài viết</h2>
           <Button asChild variant="link" className="text-crocus-600">
-            <Link to="/blogs">Xem tất cả <span aria-hidden="true">→</span></Link>
+            <Link to="/blogs">
+              Xem tất cả <span aria-hidden="true">→</span>
+            </Link>
           </Button>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {featuredBlogs.map((post) => (
             <BlogCard key={post.id} post={post} />
           ))}
         </div>
-      </section>
-      
+      </section> */}
+
       {/* Newsletter */}
       <section className="py-12 bg-crocus-50 rounded-xl">
         <div className="text-center max-w-xl mx-auto px-4">
@@ -578,9 +691,7 @@ const Index = () => {
               placeholder="Nhập email của bạn"
               className="flex-grow px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-crocus-500"
             />
-            <Button className="bg-crocus-500 hover:bg-crocus-600">
-              Đăng ký
-            </Button>
+            <Button className="bg-crocus-500 hover:bg-crocus-600">Đăng ký</Button>
           </div>
         </div>
       </section>

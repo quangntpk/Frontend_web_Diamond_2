@@ -1,176 +1,255 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Heart, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
 
-// Dữ liệu giả lập
-const favoriteProducts = [
-  {
-    id: 2,
-    name: "Áo thun Crocus Casual",
-    price: 29.99,
-    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
-    rating: 4.8,
-    type: "sản phẩm",
-  },
-  {
-    id: 5,
-    name: "Trang phục hè Crocus",
-    price: 39.99,
-    image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
-    rating: 4.2,
-    type: "sản phẩm",
-  },
-  {
-    id: 8,
-    name: "Bộ đồ thể thao Crocus",
-    price: 79.99,
-    image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085",
-    rating: 4.5,
-    type: "sản phẩm",
-  },
-];
+import { X } from "lucide-react";
 
-const favoriteCombos = [
-  {
-    id: 1,
-    name: "Bộ trang phục hè Crocus",
-    price: 129.99,
-    image: "https://images.unsplash.com/photo-1531297484001-80022131f5a1",
-    rating: 4.8,
-    type: "combo",
-    productCount: 3,
-  },
-  {
-    id: 5,
-    name: "Bộ đồ thể thao Crocus",
-    price: 149.99,
-    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
-    rating: 4.5,
-    type: "combo",
-    productCount: 2,
-  },
-];
+const YeuThich = () => {
+  const [yeuThichList, setYeuThichList] = useState([]);
+  const [comboData, setComboData] = useState({}); // Lưu trữ thông tin combo theo maCombo
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [userId, setUserId] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-const FavoritesList = () => {
-  const [activeTab, setActiveTab] = useState("all");
+  useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem("user") || "null");
+    setIsLoggedIn(!!userData);
+    const currentUserId = userData?.maNguoiDung || null;
+    setUserId(currentUserId);
 
-  // Lọc dữ liệu dựa trên tab đang chọn
-  const displayItems =
-    activeTab === "all"
-      ? [...favoriteProducts, ...favoriteCombos]
-      : activeTab === "products"
-      ? favoriteProducts
-      : favoriteCombos;
+    const fetchYeuThichList = async () => {
+      if (!currentUserId) {
+        setLoading(false);
+        return;
+      }
 
-  const removeFromFavorites = (id: number, type: string) => {
-    // Trong ứng dụng thực tế, hàm này sẽ cập nhật state hoặc gọi API
-    console.log(`Xóa ${type} với ID ${id} khỏi yêu thích`);
+      try {
+        // Lấy danh sách yêu thích
+        const response = await fetch(
+          `http://localhost:5261/api/YeuThich?maNguoiDung=${currentUserId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Không thể lấy danh sách yêu thích");
+        }
+
+        const data = await response.json();
+        const filteredData = data.filter((item) => item.maNguoiDung === currentUserId);
+        setYeuThichList(filteredData);
+
+        // Lấy thông tin combo nếu có maCombo khác null
+        const comboIds = filteredData
+          .filter((item) => item.maCombo !== null)
+          .map((item) => item.maCombo);
+
+        if (comboIds.length > 0) {
+          const comboResponse = await fetch(
+            `http://localhost:5261/api/Combo/ComboSanPhamView`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          if (!comboResponse.ok) {
+            throw new Error("Không thể lấy danh sách combo");
+          }
+
+          const comboList = await comboResponse.json();
+          const comboMap = {};
+          comboList.forEach((combo) => {
+            comboMap[combo.maCombo] = combo.name; // Sử dụng "name" thay vì "tenComBo"
+          });
+          setComboData(comboMap);
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchYeuThichList();
+  }, []);
+
+  const handleDelete = async (maYeuThich) => {
+    try {
+      const response = await fetch(`http://localhost:5261/api/YeuThich/${maYeuThich}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        setYeuThichList(yeuThichList.filter((item) => item.maYeuThich !== maYeuThich));
+      } else {
+        throw new Error("Không thể xóa mục yêu thích");
+      }
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
-  return (
-    <div className="container mx-auto py-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Sản phẩm yêu thích</h1>
-        <Button variant="outline" size="sm" className="flex items-center gap-2">
-          <Trash2 size={16} />
-          Xóa tất cả
-        </Button>
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+     
+        <main className="flex-grow py-20 px-6">
+          <div className="container mx-auto max-w-6xl flex flex-col items-center justify-center text-center">
+            <p>Đang tải...</p>
+          </div>
+        </main>
+      
       </div>
+    );
+  }
 
-      <Tabs
-        defaultValue="all"
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="mb-8"
-      >
-        <TabsList>
-          <TabsTrigger value="all">
-            Tất cả ({favoriteProducts.length + favoriteCombos.length})
-          </TabsTrigger>
-          <TabsTrigger value="products">
-            Sản phẩm ({favoriteProducts.length})
-          </TabsTrigger>
-          <TabsTrigger value="combos">
-            Combo ({favoriteCombos.length})
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col">
+      
+        <main className="flex-grow py-20 px-6">
+          <div className="container mx-auto max-w-6xl flex flex-col items-center justify-center text-center">
+            <p>{error}</p>
+          </div>
+        </main>
+    
+      </div>
+    );
+  }
 
-      {displayItems.length === 0 ? (
-        <div className="text-center py-12">
-          <Heart className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-          <h2 className="text-2xl font-medium text-gray-600 mb-2">
-            Chưa có sản phẩm yêu thích
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen flex flex-col">
+       
+        <main className="flex-grow py-20 px-6">
+          <div className="container mx-auto max-w-6xl flex flex-col items-center justify-center text-center">
+            <h2 className="text-3xl font-bold mb-4" style={{ color: "#9B59B6" }}>
+              Danh sách yêu thích
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              Vui lòng đăng nhập để xem danh sách yêu thích của bạn.
+            </p>
+            <Link to="/login" className="text-primary font-medium hover-effect hover:opacity-80">
+              Đăng nhập ngay
+            </Link>
+          </div>
+        </main>
+       
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col">
+    
+      <main className="flex-grow py-20 px-6">
+        <div className="container mx-auto max-w-6xl flex flex-col items-center justify-center text-center">
+          <h2 className="text-3xl font-bold mb-4" style={{ color: "#9B59B6" }}>
+            Danh sách yêu thích
           </h2>
-          <p className="text-gray-500 mb-6">
-            Các sản phẩm bạn yêu thích sẽ xuất hiện ở đây để bạn dễ dàng tìm thấy
-            sau này.
+          <p className="text-muted-foreground mb-6">
+            Đây là trang hiển thị các sản phẩm và combo bạn đã thêm vào danh sách yêu thích.
           </p>
-          <Button asChild className="bg-crocus-500 hover:bg-crocus-600">
-            <Link to="/products">Xem sản phẩm</Link>
-          </Button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {displayItems.map((item) => (
-            <Card
-              key={`${item.type}-${item.id}`}
-              className="overflow-hidden group"
-            >
-              <div className="relative aspect-square">
-                <Link to={`/${item.type}s/${item.id}`}>
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                </Link>
-                <button
-                  onClick={() => removeFromFavorites(item.id, item.type)}
-                  className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 hover:bg-red-50 transition-colors group-hover:opacity-100"
+          {yeuThichList.length > 0 ? (
+            <div className="w-full flex flex-col gap-4">
+              {yeuThichList.map((item) => (
+                <div
+                  key={item.maYeuThich}
+                  className="bg-white border rounded-xl p-4 shadow-md flex items-center justify-between w-full"
+                  style={{ borderColor: "#9B59B6" }}
                 >
-                  <Heart className="h-5 w-5 fill-red-500 text-red-500" />
-                </button>
-                {item.type === "combo" && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                    <span className="inline-block bg-crocus-500 text-white px-2 py-1 rounded text-xs font-medium">
-                      {(item as any).productCount} Sản phẩm
-                    </span>
+                  <div className="flex items-center w-full gap-6">
+                    {item.maCombo === null ? (
+                      // Hiển thị sản phẩm nếu maCombo là null
+                      <>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg font-semibold truncate">
+                            Mã sản phẩm: {item.maSanPham}
+                          </h3>
+                        </div>
+                        <div className="flex-2 min-w-0">
+                          <h3 className="text-lg font-semibold truncate">
+                            Tên sản phẩm: {item.tenSanPham}
+                          </h3>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-muted-foreground truncate">
+                            Ngày yêu thích: {new Date(item.ngayYeuThich).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <Link
+                            to={`/product/${item.maSanPham}`}
+                            className="text-primary font-medium hover-effect hover:opacity-80 whitespace-nowrap"
+                          >
+                            Xem Chi Tiết
+                          </Link>
+                          <button
+                            className="h-10 w-10 border border-primary/30 rounded-full hover:bg-primary/5 transition-colors flex items-center justify-center"
+                            onClick={() => handleDelete(item.maYeuThich)}
+                          >
+                            <X className="h-5 w-5 text-red-500" />
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      // Hiển thị combo nếu maCombo khác null
+                      <>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg font-semibold truncate">
+                            Mã combo: {item.maCombo}
+                          </h3>
+                        </div>
+                        <div className="flex-2 min-w-0">
+                          <h3 className="text-lg font-semibold truncate">
+                            Tên combo: {comboData[item.maCombo] || "Đang tải..."}
+                          </h3>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-muted-foreground truncate">
+                            Ngày yêu thích: {new Date(item.ngayYeuThich).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <Link
+                            to={`/combo/${item.maCombo}`} // Giả định đường dẫn cho combo
+                            className="text-primary font-medium hover-effect hover:opacity-80 whitespace-nowrap"
+                          >
+                            Xem Chi Tiết
+                          </Link>
+                          <button
+                            className="h-10 w-10 border border-primary/30 rounded-full hover:bg-primary/5 transition-colors flex items-center justify-center"
+                            onClick={() => handleDelete(item.maYeuThich)}
+                          >
+                            <X className="h-5 w-5 text-red-500" />
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
-                )}
-              </div>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <Link to={`/${item.type}s/${item.id}`}>
-                    <h3 className="font-medium hover:text-crocus-600 transition-colors">
-                      {item.name}
-                    </h3>
-                  </Link>
-                  <span className="text-xs font-medium bg-gray-100 px-2 py-1 rounded-full capitalize">
-                    {item.type}
-                  </span>
                 </div>
-                <div className="flex justify-between items-center mt-2">
-                  <p className="font-semibold">${item.price.toFixed(2)}</p>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeFromFavorites(item.id, item.type)}
-                    className="h-8 w-8 text-gray-500 hover:text-red-500"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+              ))}
+            </div>
+          ) : (
+            <div className="mt-6">
+              <p>(Chưa có sản phẩm hoặc combo nào trong danh sách yêu thích)</p>
+            </div>
+          )}
         </div>
-      )}
+      </main>
+    
     </div>
   );
 };
 
-export default FavoritesList;
+export default YeuThich;

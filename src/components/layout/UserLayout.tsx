@@ -23,6 +23,7 @@ import {
   Twitter,
   Facebook,
   MessageSquare,
+  Ticket,
 } from "lucide-react";
 import {
   NavigationMenu,
@@ -51,6 +52,7 @@ const UserLayout = () => {
     { title: "Trang chủ", path: "/", icon: <LayoutGrid className="h-5 w-5" /> },
     { title: "Sản phẩm", path: "/products", icon: <ShoppingBag className="h-5 w-5" /> },
     { title: "Combo", path: "/combos", icon: <Package className="h-5 w-5" /> },
+     { title: "Voucher", path: "/voucher", icon: <Ticket className="h-5 w-5" /> },
     { title: "Bài viết", path: "/blogs", icon: <MessageCircle className="h-5 w-5" /> },
     { title: "Liên hệ", path: "/contact", icon: <Mail className="h-5 w-5" /> },
     

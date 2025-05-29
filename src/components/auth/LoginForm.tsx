@@ -9,6 +9,25 @@ import { useToast } from "@/components/ui/use-toast";
 import axios from "axios";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
+// Định nghĩa giao diện cho dữ liệu phản hồi
+interface User {
+  maNguoiDung?: string;
+  hoTen?: string;
+  email?: string;
+  vaiTro?: number;
+}
+
+interface LoginResponse {
+  message?: string;
+  user?: User;
+  token?: string;
+  redirectUrl?: string;
+}
+
+interface GoogleLoginResponse {
+  loginUrl?: string;
+}
+
 export const LoginForm = () => {
   const [taiKhoan, setTaiKhoan] = useState("");
   const [password, setPassword] = useState("");
@@ -28,7 +47,7 @@ export const LoginForm = () => {
     }
   }, []);
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -41,7 +60,7 @@ export const LoginForm = () => {
     }
 
     try {
-      const response = await axios.post("http://localhost:5261/api/XacThuc/DangNhap", {
+      const response = await axios.post<LoginResponse>("http://localhost:5261/api/XacThuc/DangNhap", {
         taiKhoan,
         matKhau: password,
       });
@@ -49,7 +68,7 @@ export const LoginForm = () => {
       const { message, user, token, redirectUrl } = response.data;
 
       if (user && user.vaiTro !== 1) {
-        localStorage.setItem("token", token);
+        localStorage.setItem("token", token || "");
         localStorage.setItem("userId", user.maNguoiDung || "");
         localStorage.setItem("user", JSON.stringify({
           maNguoiDung: user.maNguoiDung || "",
@@ -78,11 +97,11 @@ export const LoginForm = () => {
           email: user?.email || "",
           role: user?.vaiTro || "",
         }));
-        window.location.href = `${redirectUrl}?token=${token}&userId=${user?.maNguoiDung || ""}&user=${userData}`;
+        window.location.href = `${redirectUrl}?token=${token || ""}&userId=${user?.maNguoiDung || ""}&user=${userData}`;
       } else {
         navigate("/");
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Đăng nhập thất bại ⚠️",
@@ -102,13 +121,13 @@ export const LoginForm = () => {
 
   const handleGoogleLogin = async () => {
     try {
-      const response = await axios.get("http://localhost:5261/api/XacThuc/google-login", {
+      const response = await axios.get<GoogleLoginResponse>("http://localhost:5261/api/XacThuc/google-login", {
         params: { returnUrl: "/api/XacThuc/google-callback" },
       });
       const { loginUrl } = response.data;
       if (!loginUrl) throw new Error("Không thể lấy URL đăng nhập Google");
       window.location.href = loginUrl;
-    } catch (error) {
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Đăng nhập Google thất bại ⚠️",
@@ -127,7 +146,7 @@ export const LoginForm = () => {
     }
   };
 
-  const handleCheckboxChange = (checked) => {
+  const handleCheckboxChange = (checked: boolean) => {
     setRememberPassword(!!checked);
   };
 
@@ -202,7 +221,7 @@ export const LoginForm = () => {
             </label>
           </div>
 
-          <Button type="submit" className="w-full bg-crocus-500 hover:bg-crocus-600">
+          <Button type="submit" className="w-full bg-crocus-500 hover:bg-crocus-600" disabled={isLoading}>
             <LogIn className="mr-2 h-4 w-4" /> Đăng nhập
           </Button>
 
@@ -215,16 +234,31 @@ export const LoginForm = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" type="button" onClick={handleGoogleLogin}>
-              {/* Google SVG */}
-              Google
-            </Button>
-            <Button variant="outline" type="button">
-              {/* Hotmail SVG */}
-              Hotmail
-            </Button>
-          </div>
+          <Button variant="outline" type="button" onClick={handleGoogleLogin} className="w-full">
+            <svg
+              className="mr-2 h-4 w-4"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M22.56 12.25c0-.78-.07-1.53-.20-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                fill="#4285F4"
+              />
+              <path
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-1.02.68-2.33 1.08-3.71 1.08-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                fill="#34A853"
+              />
+              <path
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                fill="#FBBC05"
+              />
+              <path
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.60 3.30-4.53 6.16-4.53z"
+                fill="#EA4335"
+              />
+            </svg>
+            Google
+          </Button>
         </form>
       </CardContent>
       <CardFooter className="flex flex-col">

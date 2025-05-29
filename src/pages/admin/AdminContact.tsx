@@ -185,6 +185,8 @@ const AdminContact = () => {
         icon: "error",
         title: "Lỗi",
         text: "Lỗi khi tải danh sách liên hệ: " + (err as Error).message,
+        timer: 3000,
+        showConfirmButton: false,
       });
     } finally {
       setLoading(false);
@@ -236,6 +238,8 @@ const AdminContact = () => {
         icon: "error",
         title: "Lỗi",
         text: "Lỗi khi tải dữ liệu thống kê: " + (err as Error).message,
+        timer: 3000,
+        showConfirmButton: false,
       });
     } finally {
       setLoading(false);
@@ -304,7 +308,7 @@ const AdminContact = () => {
         timer: 3000,
         showConfirmButton: false,
       }).then(() => {
-        fetchLienHe(); // Tải lại danh sách liên hệ
+        fetchLienHe();
       });
     } catch (err) {
       setError((err as Error).message);
@@ -312,6 +316,8 @@ const AdminContact = () => {
         icon: "error",
         title: "Lỗi",
         text: "Lỗi khi cập nhật trạng thái: " + (err as Error).message,
+        timer: 3000,
+        showConfirmButton: false,
       });
     } finally {
       setStatusLoading((prev) => ({ ...prev, [contact.maLienHe]: false }));
@@ -342,6 +348,8 @@ const AdminContact = () => {
         icon: "error",
         title: "Lỗi",
         text: "Vui lòng chọn ít nhất một liên hệ để xóa.",
+        timer: 3000,
+        showConfirmButton: false,
       });
       setDeleteContact(null);
       return;
@@ -369,6 +377,8 @@ const AdminContact = () => {
         icon: "error",
         title: "Lỗi",
         text: "Lỗi khi xóa liên hệ: " + (err as Error).message,
+        timer: 3000,
+        showConfirmButton: false,
       });
     }
   };
@@ -407,7 +417,18 @@ const AdminContact = () => {
       });
       if (!response.ok) throw new Error("Lỗi khi gửi email hỗ trợ");
 
-      await handleConfirmStatusChange();
+      // Update contact status to "Đã xử lý" (trangThai = 1) after successful send
+      if (selectedContact) {
+        const updateResponse = await fetch(`${API_URL}/api/LienHe/${selectedContact.maLienHe}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...selectedContact, trangThai: 1 }),
+        });
+        if (!updateResponse.ok) throw new Error("Lỗi khi cập nhật trạng thái");
+
+        // Refresh the contact list to reflect the updated status
+        fetchLienHe();
+      }
 
       Swal.fire({
         icon: "success",
@@ -423,32 +444,35 @@ const AdminContact = () => {
         icon: "error",
         title: "Lỗi",
         text: "Lỗi khi gửi email hỗ trợ: " + (err as Error).message,
+        timer: 3000,
+        showConfirmButton: false,
       });
     } finally {
       setIsSending(false);
     }
   };
-const handleGetAIResponse = async () => {
-  if (!selectedContact) return;
-  setIsLoadingAI(true);
-  setAiError("");
-  try {
-    const response = await fetch(
-      `${API_URL}/api/Gemini/TraLoi?question=${encodeURIComponent(selectedContact.noiDung)}`
-    );
-    if (!response.ok) throw new Error("Lỗi khi gọi API Gemini AI");
-    const data = await response.json();
-    if (data.responseCode === 201) {
-      setSupportMessage(data.result);
-    } else {
-      throw new Error(data.errorMessage || "Không thể nhận phản hồi từ AI");
+
+  const handleGetAIResponse = async () => {
+    if (!selectedContact) return;
+    setIsLoadingAI(true);
+    setAiError("");
+    try {
+      const response = await fetch(
+        `${API_URL}/api/Gemini/TraLoiLienHe?question=${encodeURIComponent(selectedContact.noiDung)}`
+      );
+      if (!response.ok) throw new Error("Lỗi khi gọi API Gemini AI");
+      const data = await response.json();
+      if (data.responseCode === 201) {
+        setSupportMessage(data.result);
+      } else {
+        throw new Error(data.errorMessage || "Không thể nhận phản hồi từ AI");
+      }
+    } catch (err) {
+      setAiError((err as Error).message);
+    } finally {
+      setIsLoadingAI(false);
     }
-  } catch (err) {
-    setAiError((err as Error).message);
-  } finally {
-    setIsLoadingAI(false);
-  }
-};
+  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

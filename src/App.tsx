@@ -7,7 +7,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import AdminLayout from "@/components/layout/AdminLayout";
 import UserLayout from "@/components/layout/UserLayout";
 import { useEffect } from "react";
-import { useToast } from "@/hooks/use-toast"; 
+import { useToast } from "@/hooks/use-toast";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ProductList from "./pages/products/ProductList";
@@ -29,7 +29,7 @@ import Orders from "./pages/user/Orders";
 import ViewProfile from "./pages/user/ViewProfile";
 import Messages from "./pages/user/Messages";
 import StaffDashboard from "./pages/staff/StaffDashboard";
-import StaffProducts from "./pages/staff/StaffProducts";
+
 import StaffOrders from "./pages/admin/AdminOrders";
 import StaffInventory from "./pages/staff/StaffInventory";
 import InventoryForm from "./pages/staff/InventoryForm";
@@ -44,7 +44,14 @@ import AdminStaff from "./pages/admin/AdminStaff";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminInvoices from "./pages/admin/AdminInvoices";
 import AdminContact from "./pages/admin/AdminContact";
-import AdminBlog from "./pages/admin/AdminBlog"
+import AdminBlog from "./pages/admin/AdminBlog";
+import AdminStatistics from "./pages/admin/AdminStatistics";
+import AdminProducs from "./pages/admin/AdminProducts";
+import AdminInventory from "./pages/admin/AdminInventory";
+import AdminCombos from "./pages/admin/AdminCombos";
+import AdminThuongHieu from "./pages/admin/AdminThuongHieu";
+import AdminLoaiSanPham from "./pages/admin/AdminLoaiSanPham";
+import VoucherUser from "./components/layout/voucher/VoucherUser";
 
 const GoogleCallbackHandler = () => {
   const location = useLocation();
@@ -108,9 +115,9 @@ const queryClient = new QueryClient();
 const App = () => (
   <BrowserRouter>
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>        
+      <TooltipProvider>
         <AppShell>
-            <GoogleCallbackHandler />
+          <GoogleCallbackHandler />
           <Routes>
             <Route path="/" element={<UserLayout />}>
               <Route index element={<Index />} />
@@ -120,6 +127,7 @@ const App = () => (
               <Route path="combos/:id" element={<ComboDetail />} />
               <Route path="blogs" element={<BlogsList />} />
               <Route path="blogs/:id" element={<BlogDetail />} />
+              <Route path="voucher/*" element={<VoucherUser />} />
               <Route path="favorites" element={<FavoritesList />} />
               <Route path="contact" element={<Contact />} />
               <Route path="about" element={<About />} />
@@ -133,10 +141,10 @@ const App = () => (
               <Route path="user/messages" element={<Messages />} />
               <Route path="user/profile/:userId" element={<ViewProfile />} />
             </Route>
-
+            
             <Route path="/staff" element={<AdminLayout role="staff" />}>
               <Route index element={<StaffDashboard />} />
-              <Route path="products" element={<StaffProducts />} />
+
               <Route path="orders" element={<StaffOrders />} />
               <Route path="inventory" element={<StaffInventory />} />
               <Route path="inventory/form" element={<InventoryForm />} />
@@ -152,18 +160,26 @@ const App = () => (
               <Route path="users" element={<AdminUsers />} />
               <Route path="staff" element={<AdminStaff />} />
               <Route path="settings" element={<AdminSettings />} />
-              <Route path="products" element={<StaffProducts />} />
+
               <Route path="orders" element={<StaffOrders />} />
-              <Route path="inventory" element={<StaffInventory />} />
+
               <Route path="invoices" element={<AdminInvoices />} />
+              <Route path="statistics" element={<AdminStatistics />} />
+              <Route path="products" element={<AdminProducs />} />
               <Route path="blog" element={<AdminBlog />} />
-              <Route path="inventory/form" element={<InventoryForm />} />
+              <Route path="inventory" element={<AdminInventory />} />
+              <Route path="combos" element={<AdminCombos />} />
+              <Route path="thuonghieu" element={<AdminThuongHieu />} />
+              <Route path="loaisanpham" element={<AdminLoaiSanPham />} />
+
               <Route path="purchase-orders/form" element={<PurchaseOrdersForm />} />
               <Route path="products/form" element={<ProductsForm />} />
               <Route path="shipping/form" element={<ShippingForm />} />
               <Route path="orders/form" element={<OrdersForm />} />
               <Route path="invoice/form" element={<InvoiceForm />} />
               <Route path="contact" element={<AdminContact />} />
+
+
               <Route path="*" element={<NotFound />} />
             </Route>
 
