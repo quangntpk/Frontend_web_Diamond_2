@@ -52,6 +52,8 @@ import AdminCombos from "./pages/admin/AdminCombos";
 import AdminThuongHieu from "./pages/admin/AdminThuongHieu";
 import AdminLoaiSanPham from "./pages/admin/AdminLoaiSanPham";
 import VoucherUser from "./components/layout/voucher/VoucherUser";
+import PaymentSuccess from "./pages/user/PaymentSuccess";
+import PaymentFail from "./pages/user/PaymentFail";
 const GoogleCallbackHandler = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -139,8 +141,10 @@ const App = () => (
               <Route path="user/orders" element={<Orders />} />
               <Route path="user/messages" element={<Messages />} />
               <Route path="user/profile/:userId" element={<ViewProfile />} />
+              <Route path="/PaymentSuccess" element={<PaymentSuccess />} />
+              <Route path="/PaymentFail" element={<PaymentFail />} />
             </Route>
-            
+
             <Route path="/staff" element={<AdminLayout role="staff" />}>
               <Route index element={<StaffDashboard />} />
 
