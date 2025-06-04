@@ -10,7 +10,7 @@ interface AdminLayoutProps {
 
 const getPageTitle = (pathname: string): string => {
   const pathParts = pathname.split("/");
-  const page = pathParts[2] || "dashboard";
+  const page = pathParts[2] || "Statistics";
   const titles = {
     dashboard: "Bảng điều khiển",
     orders: "Đơn hàng",
