@@ -55,7 +55,7 @@ const UserLayout = () => {
      { title: "Voucher", path: "/voucher", icon: <Ticket className="h-5 w-5" /> },
     { title: "Bài viết", path: "/blogs", icon: <MessageCircle className="h-5 w-5" /> },
     { title: "Liên hệ", path: "/contact", icon: <Mail className="h-5 w-5" /> },
-    
+    { title: "Giỏ Hàng", path: "/user/cart", icon: <ShoppingCart className="h-5 w-5" /> },   
   ];
 
   // Lắng nghe sự kiện storageChange để cập nhật trạng thái đăng nhập

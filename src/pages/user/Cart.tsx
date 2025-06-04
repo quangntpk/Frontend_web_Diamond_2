@@ -339,11 +339,17 @@ const CartPage = () => {
   // Xử lý khi quay lại từ /diachi
   useEffect(() => {
     const fetchAddresses = async () => {
-      const userId = localStorage.getItem("userId");
+      
+      // FIX CỨNG TẠM
+      // const userId = localStorage.getItem("userId");
+      const userId = "KH001"
       if (!userId) return;
 
       try {
         const response = await fetch(
+
+
+
           `http://localhost:5261/api/DanhSachDiaChi/maNguoiDung/${userId}`
         );
         const data = await response.json();
@@ -377,7 +383,9 @@ const CartPage = () => {
 
   useEffect(() => {
     const fetchCartData = async () => {
-      const userId = localStorage.getItem("userId");
+      // FIX CỨNG TẠM
+      // const userId = localStorage.getItem("userId");
+      const userId = "KH001"
       if (!userId) {
         Swal.fire({
           title: "Vui lòng đăng nhập!",
