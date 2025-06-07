@@ -76,6 +76,7 @@ const CombosList = () => {
         setIsLoading(true);
         const response = await fetch("http://localhost:5261/api/Combo/ComboSanPhamView");
         if (!response.ok) {
+          console.log("Error rồi")
           throw new Error("Không thể tải danh sách combo");
         }
         const data = await response.json();

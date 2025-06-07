@@ -11,9 +11,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Search, Plus, Filter, Grid2X2, List, MoreVertical, Tag } from "lucide-react";
-// import EditComboModal from "@/components/ComboAdmin/EditComboModal.jsx";
-// import CreateComboModal from "@/components/ComboAdmin/CreateComboModal.jsx";
-// import ComboDetailAdminModal from "@/components/ComboAdmin/DetailComboModal.jsx";
+import EditComboModal from "@/components/admin/ComboAdmin/EditComboModal.jsx";
+import CreateComboModal from "@/components/admin/ComboAdmin/CreateComboModal.jsx";
+import ComboDetailAdminModal from "@/components/admin/ComboAdmin/DetailComboModal.jsx";
 import Swal from "sweetalert2";
 
 const Combos = () => {
@@ -371,7 +371,7 @@ const Combos = () => {
                       </DropdownMenu>
                     </div>
                     <div className="flex items-center gap-2 mt-3">
-                      <Badge variant="outline" className="bg-secondary text-muted-foreground border-0">
+                      <Badge variant="outline" className="bg-secondary text-white border-0">
                         <Tag className="h-3 w-3 mr-1" /> {(combo.sanPhams || []).length} sản phẩm
                       </Badge>
                       <Badge
@@ -418,7 +418,7 @@ const Combos = () => {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="bg-secondary text-muted-foreground border-0">
+                    <Badge variant="outline" className="bg-secondary text-white border-0">
                       {(combo.sanPhams || []).length} sản phẩm
                     </Badge>
                   </div>
@@ -504,7 +504,7 @@ const Combos = () => {
         </CardContent>
       </Card>
 
-      {/* <EditComboModal
+      <EditComboModal
         isEditModalOpen={isEditModalOpen}
         setIsEditModalOpen={setIsEditModalOpen}
         comboId={selectedComboId}
@@ -518,7 +518,7 @@ const Combos = () => {
         comboId={selectedComboId}
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
-      /> */}
+      />
     </div>
   );
 };

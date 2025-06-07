@@ -11,9 +11,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Search, Plus, Filter, Grid2X2, List, MoreVertical, Tag } from "lucide-react";
-// import EditProductModal from "@/components/SanPhamAdmin/EditProductModal";
-// import CreateSanPhamModal from "@/components/SanPhamAdmin/CreateSanPhamModal";
-// import DetailSanPhamModal from "@/components/SanPhamAdmin/DetailSanPhamModal";
+import EditProductModal from "@/components/admin/SanPhamAdmin/EditProductModal";
+import CreateSanPhamModal from "@/components/admin/SanPhamAdmin/CreateSanPhamModal";
+import DetailSanPhamModal from "@/components/admin/SanPhamAdmin/DetailSanPhamModal";
 import Swal from "sweetalert2";
 
 const Products = () => {
@@ -221,16 +221,29 @@ const Products = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Sản phẩm</h1>
           <p className="text-muted-foreground mt-1">Quản lý sản phẩm trong cửa hàng của bạn</p>
         </div>
-        <Button
-          className="bg-purple hover:bg-purple-medium"
-          onClick={() => setIsAddModalOpen(true)}
+       <Button
+          style={{
+            display: "block",
+            visibility: "visible",
+            opacity: 1,
+            backgroundColor: "#752CE0", // Màu ban đầu
+            color: "white", // Đổi chữ thành trắng để tương phản tốt với nền tím
+            transition: "background-color 0.3s ease", // Hiệu ứng chuyển màu mượt
+            minWidth: "300px", // Tăng chiều rộng tối thiểu
+            textAlign: "center", // Căn giữa nội dung
+          }}
+          className="flex items-center justify-center gap-2 px-4 py-2 rounded-md hover:bg-[#439ADE]"
+          onClick={() => {
+            console.log("Nút Thêm Sản Phẩm Mới được nhấn");
+            setIsAddModalOpen(true);
+          }}
         >
-          <Plus className="mr-2 h-4 w-4" /> Thêm Sản Phẩm Mới
+          <Plus className="h-4 w-4" /> Thêm Sản Phẩm Mới
         </Button>
       </div>
 
@@ -353,10 +366,10 @@ const Products = () => {
                       </DropdownMenu>
                     </div>
                     <div className="flex items-center gap-2 mt-3">
-                      <Badge variant="outline" className="bg-secondary text-muted-foreground border-0">
+                      <Badge variant="outline" className="bg-secondary text-white border-0">
                         <Tag className="h-3 w-3 mr-1" /> {product.loaiSanPham || "N/A"}
                       </Badge>
-                      <Badge variant="outline" className="bg-secondary text-muted-foreground border-0">
+                      <Badge variant="outline" className="bg-secondary text-white border-0">
                         <Tag className="h-3 w-3 mr-1" /> {product.chatLieu || "N/A"}
                       </Badge>
                       <Badge
@@ -398,12 +411,12 @@ const Products = () => {
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold">{product.name || "Không có tên"}</h3>
-                    <p className="text-sm text-muted-foreground line-clamp-1">
+                    <p className="text-sm text-white line-clamp-1">
                       Thương hiệu: {product.thuongHieu || "Không xác định"}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="bg-secondary text-muted-foreground border-0">
+                    <Badge variant="outline" className="bg-secondary text-white border-0">
                       {product.loaiSanPham || "N/A"}
                     </Badge>
                   </div>
@@ -483,7 +496,7 @@ const Products = () => {
         </CardContent>
       </Card>
 
-      {/* <EditProductModal
+      <EditProductModal
         isEditModalOpen={isEditModalOpen}
         setIsEditModalOpen={setIsEditModalOpen}
         selectedProduct={selectedProduct}
@@ -498,7 +511,7 @@ const Products = () => {
         productId={selectedProductId}
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
-      /> */}
+      />
     </div>
   );
 };

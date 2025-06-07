@@ -207,7 +207,7 @@ const ProductDetail = () => {
           to="/products"
           className="text-crocus-600 hover:underline flex items-center gap-1"
         >
-          ← Back to Products
+          ← Quay lại trang Danh Sách Sản Phẩm
         </Link>
       </div>
 
@@ -271,11 +271,11 @@ const ProductDetail = () => {
               <span className="text-gray-600">4.5 ({mockReviews.length} reviews)</span>
             </div>
             <p className="text-2xl font-bold text-crocus-600 mt-2">
-              {selectedProduct.details[0].gia.toFixed(2)} VND
+              {(selectedProduct.details[0].gia/1000).toFixed(3)} VND
             </p>
           </div>
 
-          <p className="text-gray-700">{selectedProduct.moTa || "No description available."}</p>
+          <p className="text-gray-700">{selectedProduct.moTa || "Sản phẩm này chưa có mô tả"}</p>
 
           {/* Color Selection */}
           <div>
@@ -320,13 +320,13 @@ const ProductDetail = () => {
           {/* Stock Information */}
           <div>
             <p className="text-gray-700">
-              Stock: <span className="font-medium">{stock} units available</span>
+              Trong kho còn lại : <span className="font-medium">{stock} sản phẩm</span>
             </p>
           </div>
 
           {/* Quantity */}
           <div>
-            <h3 className="font-medium mb-2">Quantity</h3>
+            <h3 className="font-medium mb-2">Só Lượng</h3>
             <div className="flex items-center border border-gray-200 rounded-md w-32">
               <button
                 onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
@@ -353,7 +353,7 @@ const ProductDetail = () => {
               className="flex-1 bg-crocus-600 hover:bg-crocus-700"
               disabled={stock === 0}
             >
-              <ShoppingCart className="mr-2 h-4 w-4" /> Add to Cart
+              <ShoppingCart className="mr-2 h-4 w-4" /> Thêm Vào Giỏ Hàng
             </Button>
             <Button variant="outline" onClick={toggleFavorite} className="w-12">
               <Heart className="h-5 w-5" />
@@ -366,19 +366,19 @@ const ProductDetail = () => {
       <div className="mb-12">
         <Tabs defaultValue="details">
           <TabsList className="mb-4">
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="specifications">Specifications</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews</TabsTrigger>
+            <TabsTrigger value="details">Chi Tiết Sản Phẩm</TabsTrigger>
+            <TabsTrigger value="specifications">Tóm Tắt</TabsTrigger>
+            <TabsTrigger value="reviews">Đánh Giá</TabsTrigger>
           </TabsList>
           <TabsContent value="details" className="p-4 border rounded-lg">
-            <p className="text-gray-700">{selectedProduct.moTa || "No description available."}</p>
+            <p className="text-gray-700">{selectedProduct.moTa || "Sản Phẩm Này Chưa Có Mô Tả"}</p>
           </TabsContent>
           <TabsContent value="specifications" className="p-4 border rounded-lg">
             <ul className="list-disc pl-5 space-y-2">
               <li className="text-gray-700">Sizes: {selectedProduct.details.map((d) => d.kichThuoc).join(", ")}</li>
-              <li className="text-gray-700">Stock: {stock} units</li>
-              <li className="text-gray-700">Material: {selectedProduct.chatLieu}</li>
-              <li className="text-gray-700">Brand: {selectedProduct.maThuongHieu}</li>
+              <li className="text-gray-700">Số Lượng còn lại: {stock} units</li>
+              <li className="text-gray-700">Chất Liệu: {selectedProduct.chatLieu}</li>
+              <li className="text-gray-700">Thương Hiệu: {selectedProduct.maThuongHieu}</li>
             </ul>
           </TabsContent>
           <TabsContent value="reviews" className="p-4 border rounded-lg">
@@ -419,7 +419,7 @@ const ProductDetail = () => {
 
       {/* Related Products */}
       <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">You May Also Like</h2>
+        <h2 className="text-2xl font-bold mb-4">Bạn có thể sẽ thích</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {mockRelatedProducts.map((product) => (
             <Card key={product.id} className="overflow-hidden">
