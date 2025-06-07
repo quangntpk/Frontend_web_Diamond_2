@@ -61,6 +61,9 @@ import Newsletter from "./components/default/Newsletter";
 import Features from "./components/default/Features";
 import Testing from "./components/default/Testing";
 import DiaChi from "./components/default/DiaChi";
+import AdminType from "./pages/admin/AdminType";
+import AdminSubcategories from "./pages/admin/AdminSubcategories";
+import AdminTrademark from "./pages/admin/AdminTrademark";
 
 const GoogleCallbackHandler = () => {
   const location = useLocation();
@@ -196,6 +199,9 @@ const App = () => (
               <Route path="orders/form" element={<OrdersForm />} />
               <Route path="invoice/form" element={<InvoiceForm />} />
               <Route path="contact" element={<AdminContact />} />
+              <Route path="type" element={<AdminType />} />
+              <Route path="subcategories" element={<AdminSubcategories />} />
+              <Route path="trademark" element={<AdminTrademark />} />
 
 
               <Route path="*" element={<NotFound />} />

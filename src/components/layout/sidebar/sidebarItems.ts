@@ -57,3 +57,9 @@ export const supportItems: SidebarItemType[] = [
   // { title: "Trang web", icon: Globe, path: "/admin/website", color: "text-green-600" },
   // { title: "Bảo mật", icon: Shield, path: "/admin/security", color: "text-purple-600" },
 ];
+
+export const categoryItems: SidebarItemType[] = [
+  { title: "Loại sản phẩm", icon: Tag, path: "/admin/type", color: "text-pink-600" },
+  { title: "Danh mục con", icon: ClipboardList, path: "/admin/subcategories", color: "text-teal-600" },
+  { title: "Thương hiệu", icon: CreditCard, path: "/admin/trademark", color: "text-pink-600" },
+];

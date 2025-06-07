@@ -4,7 +4,7 @@ import { SidebarHeader } from "./sidebar/SidebarHeader";
 import { SidebarFooter } from "./sidebar/SidebarFooter";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel } from "@/components/ui/sidebar";
 import { SidebarItem } from "./sidebar/SidebarItem";
-import { adminItems, staffItems, adminManagementItems, supportItems } from "./sidebar/sidebarItems";
+import { adminItems, staffItems, adminManagementItems, supportItems, categoryItems } from "./sidebar/sidebarItems";
 
 interface SidebarProps {
   role: "staff" | "admin";
@@ -20,6 +20,7 @@ const Sidebar = ({ role }: SidebarProps) => {
   const menuItems = role === "staff" ? staffItems : adminItems;
   const managementItems = role === "admin" ? adminManagementItems : [];
   const supportMenuItems = role === "admin" ? supportItems : [];
+  const categoryMenuItems = role === "admin" ? categoryItems : [];
 
   return (
     <aside 
@@ -58,7 +59,32 @@ const Sidebar = ({ role }: SidebarProps) => {
             ))}
           </SidebarMenu>
         </SidebarGroup>
-
+        {categoryMenuItems.length > 0 && (
+          <SidebarGroup className={cn("mt-4", isCollapsed ? "px-1" : "px-2")}>
+            {!isCollapsed && <SidebarGroupLabel className="text-gray-500 font-medium px-3 py-2 text-xs uppercase">Danh mục</SidebarGroupLabel>}
+            <SidebarMenu>
+              {categoryMenuItems.map((item) => (
+                <SidebarMenuItem key={item.path} className={cn(isCollapsed ? "px-0 w-full flex justify-center" : "")}>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip={isCollapsed ? item.title : undefined}
+                    className={cn("my-1 transition-all rounded-md", isCollapsed ? "w-full" : "")}
+                  >
+                    <SidebarItem
+                      title={item.title}
+                      icon={item.icon}
+                      path={item.path}
+                      badge={item.badge}
+                      collapsed={isCollapsed}
+                      color={item.color}
+                    />
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroup>
+        )}
+        
         {managementItems.length > 0 && (
           <SidebarGroup className={cn("mt-4", isCollapsed ? "px-1" : "px-2")}>
             {!isCollapsed && <SidebarGroupLabel className="text-gray-500 font-medium px-3 py-2 text-xs uppercase">Quản lý</SidebarGroupLabel>}

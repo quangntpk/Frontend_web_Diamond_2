@@ -16,11 +16,14 @@ const getPageTitle = (pathname: string): string => {
     orders: "Đơn hàng",
     products: "Sản phẩm",
     inventory: "Kho hàng",
-    users: "Người dùng",
+    users: "Tài khoản",
     staff: "Nhân viên",
     settings: "Cài đặt",
     invoices: "Hóa đơn",
     form: "Form",
+    trademark: "Thương hiệu",
+    type: "Loại sản phẩm",
+    subcategories: "Danh mục con",
   };
   return titles[page] || page.charAt(0).toUpperCase() + page.slice(1);
 };
