@@ -519,7 +519,7 @@ const ProductListing = () => {
                 {filteredProducts.map((product) => (
                   <Card key={product.id} className="overflow-hidden group">
                     <div className="relative aspect-square">
-                      <Link to={`/product/${product.id}`}>
+                      <Link to={`/products/${product.id}`}>
                         <img
                           src={product.imageSrc}
                           alt={product.name}
@@ -594,7 +594,7 @@ const ProductListing = () => {
                           size="sm"
                           className="flex-1"
                         >
-                          <Link to={`/product/${product.id}`}>
+                          <Link to={`/products/${product.id}`}>
                             Chi tiết
                           </Link>
                         </Button>
