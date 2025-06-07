@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ShoppingCart, Trash2, Plus, Minus } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-
+import GiohangComboSupport from "@/components/user/cart/GioHangComboSupport";
 import { toast } from "sonner";
 import * as Dialog from "@radix-ui/react-dialog";
 
@@ -1619,13 +1619,13 @@ const CartPage = () => {
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50" />
           <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            {/* {selectedCombo && (
+            {selectedCombo && (
               <GiohangComboSupport
                 combo={selectedCombo}
                 onClose={() => setSelectedCombo(null)}
                 onUpdateCombo={handleUpdateCombo}
               />
-            )} */}
+            )}
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>

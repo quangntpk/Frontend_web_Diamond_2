@@ -1,245 +1,149 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { Heart, ShoppingBag } from "lucide-react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { 
+  Card, 
+  CardContent
+} from "@/components/ui/card";
+import { 
+  Heart,
+  ShoppingCart
+} from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Swal from "sweetalert2";
 
 const ComboDetail = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [combo, setCombo] = useState(null);
-  const [selections, setSelections] = useState({});
+  const [combo, setCombo] = useState<any>(null);
+  const [mainImage, setMainImage] = useState<string>("");
   const [comboQuantity, setComboQuantity] = useState(1);
-  const [selectedImages, setSelectedImages] = useState({});
-  const [sizeQuantities, setSizeQuantities] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [colorSelected, setColorSelected] = useState({});
-  const [isLiked, setIsLiked] = useState(false); // Thêm trạng thái yêu thích
-  const [likedId, setLikedId] = useState(null); // Lưu ID yêu thích
-  const formatter = new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [selections, setSelections] = useState<any>({});
+  const [sizeQuantities, setSizeQuantities] = useState<any>({});
+  const [colorSelected, setColorSelected] = useState<any>({});
+
   useEffect(() => {
     const fetchCombo = async () => {
-      if (!id) {
-        setError("Combo ID is missing");
-        setLoading(false);
-        return;
-      }
-
       try {
-        setLoading(true);
         const response = await fetch(`http://localhost:5261/api/Combo/ComboSanPhamView?id=${id}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch combo");
-        }
         const data = await response.json();
-        const comboData = Array.isArray(data) ? data[0] : data;
 
-        const formattedCombo = {
-          id: comboData.maCombo,
-          name: comboData.name,
-          description: comboData.moTa || "Không có mô tả",
-          price: comboData.gia,
-          image: `data:image/jpeg;base64,${comboData.hinhAnh}`,
-          quantity: comboData.soLuong,
-          products: comboData.sanPhams.map((product) => ({
+        // Process the API data to match the provided structure
+        const processedCombo = {
+          id: data[0].maCombo,
+          name: data[0].name,
+          price: data[0].gia,
+          description: data[0].moTa || "Không có mô tả",
+          longDescription: data[0].moTa || "Không có mô tả chi tiết",
+          image: data[0].hinhAnh ? `data:image/jpeg;base64,${data[0].hinhAnh}` : "https://images.unsplash.com/photo-1531297484001-80022131f5a1",
+          images: data[0].hinhAnh 
+            ? [`data:image/jpeg;base64,${data[0].hinhAnh}`]
+            : [
+                "https://images.unsplash.com/photo-1531297484001-80022131f5a1",
+                "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
+                "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b"
+              ],
+          rating: 4.8,
+          reviews: [
+            { id: 1, user: "Madison K.", date: "April 2, 2025", rating: 5, comment: "Giá trị tuyệt vời! Cả ba sản phẩm kết hợp hoàn hảo và chất lượng tuyệt vời." },
+            { id: 2, user: "Ryan T.", date: "March 28, 2025", rating: 5, comment: "Mua cho vợ và cô ấy rất thích. Màu sắc rất đẹp." },
+            { id: 3, user: "Jamie L.", date: "March 15, 2025", rating: 4, comment: "Combo tuyệt vời, nhưng tôi mong có thêm lựa chọn kích thước cho váy." }
+          ],
+          isFavorite: false,
+          products: data[0].sanPhams.map((product: any) => ({
             id: product.idSanPham,
             name: product.name,
-            brand: product.thuongHieu,
-            productType: product.loaiSanPham,
-            colors: product.mauSac.map((color) => `#${color}`),
-            images: product.hinh.map((base64) => `data:image/jpeg;base64,${base64}`),
-            material: product.chatLieu,
-            description: product.moTa || "Không có mô tả",
-            rating: 4.5,
+            price: product.donGia,
+            image: product.hinh && product.hinh.length > 0 
+              ? `data:image/jpeg;base64,${product.hinh[0]}`
+              : "https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
+            colors: product.mauSac || [],
+            sizes: product.kichThuoc || []
           })),
+          originalPrice: data[0].gia * 1.15,
+          savings: data[0].gia * 0.15,
+          savingsPercentage: 15
         };
-        setCombo(formattedCombo);
 
-        const initialSelections = {};
-        const initialImages = {};
-        const initialColorSelected = {};
-        formattedCombo.products.forEach((product) => {
-          initialSelections[product.id] = { colorIndex: null, sizeIndex: null };
-          initialImages[product.id] = 0;
-          initialColorSelected[product.id] = false;
-        });
+        // Initialize selections for each product
+        const initialSelections = processedCombo.products.reduce((acc: any, product: any) => ({
+          ...acc,
+          [product.id]: { colorIndex: null, sizeIndex: null }
+        }), {});
         setSelections(initialSelections);
-        setSelectedImages(initialImages);
-        setColorSelected(initialColorSelected);
 
-        // Kiểm tra trạng thái yêu thích
-        const userData = JSON.parse(localStorage.getItem("user"));
-        //Hiện Tại chưa có Login nên đang Fix Cứng
-        // const currentUserId = userData?.maNguoiDung;
-        const currentUserId = "KH001"
-        if (currentUserId) {
-          const yeuThichResponse = await fetch("http://localhost:5261/api/YeuThich");
-          if (!yeuThichResponse.ok) throw new Error("Failed to fetch favorites");
-          const yeuThichData = await yeuThichResponse.json();
-          const userFavorite = yeuThichData.find(
-            (yeuThich) =>
-              yeuThich.maCombo === formattedCombo.id &&
-              yeuThich.maNguoiDung === currentUserId
-          );
-          if (userFavorite) {
-            setIsLiked(true);
-            setLikedId(userFavorite.maYeuThich);
-          }
-        }
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+        setCombo(processedCombo);
+        setMainImage(processedCombo.image);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching combo:", error);
+        setIsLoading(false);
       }
     };
 
     fetchCombo();
   }, [id]);
 
-  const fetchSizeQuantities = async (productId, color) => {
+  const fetchSizeQuantities = async (productId: string, color: string) => {
     try {
       const colorCode = color.replace("#", "");
       const response = await fetch(
         `http://localhost:5261/api/SanPham/SanPhamByIDSorted?id=${productId}_${colorCode}`
       );
       if (!response.ok) {
-        throw new Error("Failed to fetch size quantities");
+        throw new Error("Không thể lấy thông tin kích thước và số lượng");
       }
       const data = await response.json();
       const productData = Array.isArray(data) ? data[0] : data;
 
-      const sizeData = productData.details.map((detail) => ({
+      const sizeData = productData.details.map((detail: any) => ({
         size: detail.kichThuoc.trim(),
         quantity: detail.soLuong,
         price: detail.gia,
       }));
 
-      setSizeQuantities((prev) => ({
+      setSizeQuantities((prev: any) => ({
         ...prev,
         [productId]: sizeData,
       }));
     } catch (err) {
-      console.error("Error fetching size quantities:", err);
+      console.error("Lỗi khi lấy thông tin kích thước:", err);
+      Swal.fire({
+        title: "Lỗi!",
+        text: "Không thể lấy thông tin kích thước. Vui lòng thử lại.",
+        icon: "error",
+        timer: 2000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
     }
   };
 
-  const handleSelectionChange = (productId, field, value) => {
-    setSelections((prev) => {
+  const handleSelectionChange = (productId: string, field: string, value: any) => {
+    setSelections((prev: any) => {
       const newSelections = {
         ...prev,
         [productId]: { ...prev[productId], [field]: value },
       };
 
       if (field === "colorIndex") {
-        const selectedColor = combo.products.find((p) => p.id === productId).colors[value];
-        fetchSizeQuantities(productId, selectedColor);
-        setColorSelected((prev) => ({
+        const selectedColor = combo.products.find((p: any) => p.id === productId).colors[value];
+        fetchSizeQuantities(productId, `#${selectedColor}`);
+        setColorSelected((prev: any) => ({
           ...prev,
           [productId]: true,
         }));
+        // Reset size selection when color changes
+        newSelections[productId].sizeIndex = null;
       }
 
       return newSelections;
     });
   };
 
-  const handleImageChange = (productId, index) => {
-    setSelectedImages((prev) => ({ ...prev, [productId]: index }));
-  };
-
-  const handleToggleLike = async () => {
-    const userData = JSON.parse(localStorage.getItem("user"));
-    const maNguoiDung = userData?.maNguoiDung;
-    const hoTen = userData?.hoTen;
-
-    if (!maNguoiDung) {
-      Swal.fire({
-        title: "Vui lòng đăng nhập!",
-        text: "Bạn cần đăng nhập để thêm combo vào danh sách yêu thích.",
-        icon: "warning",
-        timer: 2000,
-        timerProgressBar: true,
-        showConfirmButton: false,
-      });
-      return;
-    }
-
-    if (isLiked) {
-      try {
-        const response = await fetch(`http://localhost:5261/api/YeuThich/${likedId}`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        if (!response.ok) throw new Error("Không thể xóa combo khỏi danh sách yêu thích");
-        setIsLiked(false);
-        setLikedId(null);
-        Swal.fire({
-          title: "Thành công!",
-          text: "Đã xóa combo khỏi danh sách yêu thích!",
-          icon: "success",
-          timer: 2000,
-          timerProgressBar: true,
-          showConfirmButton: false,
-        });
-      } catch (err) {
-        Swal.fire({
-          title: "Lỗi!",
-          text: `Có lỗi xảy ra khi xóa yêu thích: ${err.message}`,
-          icon: "error",
-          timer: 2000,
-          timerProgressBar: true,
-          showConfirmButton: false,
-        });
-      }
-    } else {
-      const yeuThichData = {
-        maCombo: combo.id,
-        maNguoiDung: maNguoiDung,
-        hoTen: hoTen,
-        ngayYeuThich: new Date().toISOString(),
-      };
-      try {
-        const response = await fetch("http://localhost:5261/api/YeuThich", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify(yeuThichData),
-        });
-        if (!response.ok) throw new Error("Không thể thêm combo vào danh sách yêu thích");
-        const addedFavorite = await response.json();
-        setIsLiked(true);
-        setLikedId(addedFavorite.maYeuThich);
-        Swal.fire({
-          title: "Thành công!",
-          text: "Đã thêm combo vào danh sách yêu thích!",
-          icon: "success",
-          timer: 2000,
-          timerProgressBar: true,
-          showConfirmButton: false,
-        });
-      } catch (err) {
-        Swal.fire({
-          title: "Lỗi!",
-          text: `Có lỗi xảy ra khi thêm yêu thích: ${err.message}`,
-          icon: "error",
-          timer: 2000,
-          timerProgressBar: true,
-          showConfirmButton: false,
-        });
-      }
-    }
-  };
-
   const handleAddToCart = async () => {
-    //Hiện tại đang fix cứng
-    // const userId = localStorage.getItem("userId");
-    const userId = "KH001";
+    const userId = localStorage.getItem("userId");
     if (!userId) {
       Swal.fire({
         title: "Vui lòng đăng nhập!",
@@ -255,12 +159,14 @@ const ComboDetail = () => {
     }
 
     const invalidProducts = combo.products.filter(
-      (product) => selections[product.id].sizeIndex === null
+      (product: any) => 
+        selections[product.id].colorIndex === null || 
+        selections[product.id].sizeIndex === null
     );
     if (invalidProducts.length > 0) {
       Swal.fire({
         title: "Thông báo!",
-        text: "Vui lòng chọn kích thước cho tất cả sản phẩm trong combo!",
+        text: "Vui lòng chọn màu sắc và kích thước cho tất cả sản phẩm trong combo!",
         icon: "error",
         timer: 2000,
         timerProgressBar: true,
@@ -273,7 +179,7 @@ const ComboDetail = () => {
       IDKhachHang: userId,
       IDCombo: Number(combo.id),
       SoLuong: Number(comboQuantity),
-      Detail: combo.products.map((product) => ({
+      Detail: combo.products.map((product: any) => ({
         MaSanPham: String(product.id),
         MauSac: product.colors[selections[product.id].colorIndex].replace("#", ""),
         KichThuoc: sizeQuantities[product.id][selections[product.id].sizeIndex].size,
@@ -305,7 +211,7 @@ const ComboDetail = () => {
     } catch (err) {
       Swal.fire({
         title: "Lỗi!",
-        text: `Có lỗi xảy ra khi thêm vào giỏ hàng: ${err.message}`,
+        text: `Có lỗi xảy ra khi thêm vào giỏ hàng: ${(err as Error).message}`,
         icon: "error",
         timer: 2000,
         timerProgressBar: true,
@@ -314,170 +220,313 @@ const ComboDetail = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="pt-24 pb-16 px-6 min-h-screen flex items-center justify-center">
-        <p>Đang tải dữ liệu...</p>
-      </div>
-    );
+  const toggleFavorite = () => {
+    console.log(`Toggle favorite for combo ${combo?.id}`);
+  };
+
+  if (isLoading) {
+    return <div className="container mx-auto py-8">Đang tải...</div>;
   }
 
-  if (error || !combo) {
-    return (
-      <div className="pt-24 pb-16 px-6 min-h-screen flex items-center justify-center">
-        <p>Lỗi: {error || "Combo not found"}</p>
-      </div>
-    );
+  if (!combo) {
+    return <div className="container mx-auto py-8">Không tìm thấy combo</div>;
   }
 
   return (
-    <>
-      <div className="pt-24 pb-16 px-6 min-h-screen from-white to-secondary/20">
-        <div className="container mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-            <div className="space-y-6">
-              <div className="rounded-xl overflow-hidden border border-border bg-white shadow-sm">
-                <img
-                  src={combo.image}
-                  alt={combo.name}
-                  className="w-full aspect-[4/5] object-cover"
-                />
-              </div>
+    <div className="container mx-auto py-8">
+      <div className="mb-4">
+        <Link to="/combos" className="text-crocus-600 hover:underline flex items-center gap-1">
+          ← Quay về Trang Danh Sách Combo
+        </Link>
+      </div>
 
-              <div>
-                <h4 className="text-sm font-medium mb-2">Số Lượng Combo</h4>
-                <div className="flex items-center border border-border rounded-md w-32">
-                  <button
-                    className="w-10 h-10 flex items-center justify-center text-lg"
-                    onClick={() => setComboQuantity(Math.max(1, comboQuantity - 1))}
-                    disabled={comboQuantity <= 1}
-                  >
-                    -
-                  </button>
-                  <div className="flex-1 text-center">{comboQuantity}</div>
-                  <button
-                    className="w-10 h-10 flex items-center justify-center text-lg"
-                    onClick={() => setComboQuantity(Math.min(combo.quantity, comboQuantity + 1))}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        <div className="space-y-4">
+          <div className="aspect-video rounded-lg overflow-hidden bg-gray-100">
+            <img 
+              src={mainImage} 
+              alt={combo.name} 
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            {combo.images.map((image: string, idx: number) => (
               <button
-                className="flex-1 h-12 px-6 border border-black text-black rounded-full hover:bg-gradient-to-r hover:from-pink-400 hover:to-gray-900 hover:text-white transition-all flex items-center justify-center"
-                onClick={handleAddToCart}
+                key={idx}
+                onClick={() => setMainImage(image)}
+                className={`aspect-square rounded-md overflow-hidden ${mainImage === image ? 'ring-2 ring-crocus-500' : 'opacity-70'}`}
               >
-                <ShoppingBag className="mr-2 h-5 w-5" />
-                Thêm Vào Giỏ Hàng
-              </button>
-              <button
-                onClick={handleToggleLike}
-                className="h-12 w-12 border border-black rounded-full hover:bg-gradient-to-r hover:from-pink-400 hover:to-pink-600 hover:border-pink-600 transition-all duration-300 flex items-center justify-center"
-              >
-                <Heart
-                  className={cn(
-                    "h-5 w-5",
-                    isLiked ? "fill-red-500 text-red-500" : "text-black hover:text-white"
-                  )}
+                <img 
+                  src={image} 
+                  alt={`${combo.name} view ${idx + 1}`} 
+                  className="w-full h-full object-cover"
                 />
               </button>
-            </div>
-            </div>
+            ))}
+          </div>
+        </div>
 
-            <div className="flex flex-col space-y-6">
-              <h1 className="text-3xl md:text-4xl font-medium mb-6 gradient-text">{combo.name}</h1>
-              <div>
-                <p className="text-2xl font-medium text-primary mb-4">{formatter.format(combo.price)}</p>
-                <p className="text-muted-foreground">{combo.description}</p>
+        <div className="space-y-6">
+          <div>
+            <div className="flex items-center justify-between">
+              <h1 className="text-3xl font-bold">{combo.name}</h1>
+              <Button 
+                variant="ghost" 
+                onClick={toggleFavorite}
+                className="h-10 w-10 p-0"
+              >
+                <Heart className={`h-6 w-6 ${combo.isFavorite ? "fill-red-500 text-red-500" : ""}`} />
+              </Button>
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <div className="flex">
+                {[...Array(5)].map((_: any, i: number) => (
+                  <svg 
+                    key={i} 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    viewBox="0 0 24 24" 
+                    fill={i < Math.floor(combo.rating) ? "currentColor" : "none"}
+                    stroke={i < Math.floor(combo.rating) ? "none" : "currentColor"}
+                    className={`w-5 h-5 ${i < Math.floor(combo.rating) ? "text-yellow-400" : "text-gray-300"}`}
+                  >
+                    <path 
+                      fillRule="evenodd" 
+                      d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" 
+                      clipRule="evenodd" 
+                    />
+                  </svg>
+                ))}
               </div>
+              <span className="text-gray-600">{combo.rating} ({combo.reviews.length} Đánh Giá)</span>
+            </div>
+            <div className="mt-2">
+              <div className="flex items-center gap-2">
+                <p className="text-2xl font-bold text-crocus-600">{(combo.price/1000).toFixed(3)} VND</p>
+                <p className="text-sm line-through text-gray-500">{(combo.originalPrice/1000).toFixed(3)} VND</p>
+              </div>
+              <p className="text-green-600 font-medium">Tiết Kiệm {(combo.savings/1000).toFixed(3)} VND ({combo.savingsPercentage}% off)</p>
+            </div>
+          </div>
 
-              {combo.products.map((product) => (
-                <div key={product.id} className="border p-4 rounded-lg" style={{scale: "90%"}}>
-                  <h3 className="text-lg font-medium mb-2">{product.name}</h3>
+          <p className="text-gray-700">{combo.description}</p>
 
-                  <div className="space-y-4">
-                    <div className="rounded-xl overflow-hidden border border-border bg-white shadow-sm">
-                      <img
-                        src={product.images[selectedImages[product.id]]}
-                        alt={product.name}
-                        className="w-full object-cover"
-                        style={{ maxHeight: "200px" }}
-                      />
-                    </div>
-                    <div className="flex gap-3 overflow-auto pb-2">
-                      {product.images.map((image, index) => (
-                        <button
-                          key={index}
-                          className={cn(
-                            "rounded-lg overflow-hidden border-2 min-w-[80px] w-20 aspect-square transition-all",
-                            selectedImages[product.id] === index
-                              ? "border-primary ring-2 ring-primary/20"
-                              : "border-border/50 hover:border-primary/50"
-                          )}
-                          onClick={() => handleImageChange(product.id, index)}
-                        >
-                          <img
-                            src={image}
-                            alt={`${product.name} thumbnail ${index + 1}`}
-                            className="w-full h-full object-cover"
-                            style={{maxWidth: "150px"}}
-                          />
-                        </button>
-                      ))}
+          <div>
+            <h3 className="font-medium mb-3">Bao Gồm các Sản Phẩm ({combo.products.length})</h3>
+            <div className="space-y-3">
+              {combo.products.map((product: any) => (
+                <div key={product.id} className="bg-gray-50 p-4 rounded-md">
+                  <div className="flex items-center gap-3 mb-3">
+                    <img 
+                      src={product.image} 
+                      alt={product.name} 
+                      className="w-14 h-14 rounded object-cover"
+                    />
+                    <div>
+                      <h4 className="font-medium">
+                        <Link to={`/products/${product.id}`} className="hover:text-crocus-600 transition-colors">
+                          {product.name}
+                        </Link>
+                      </h4>
+                      <p className="text-sm text-gray-600">{(product.price/1000).toFixed(3)} VND</p>
                     </div>
                   </div>
-
-                  <div className="mt-4">
-                    <h4 className="text-sm font-medium mb-2">Màu Sắc</h4>
-                    <div className="flex gap-3">
-                      {product.colors.map((color, index) => (
-                        <button
-                          key={index}
-                          className={cn(
-                            "w-8 h-8 rounded-full transition-all",
-                            selections[product.id].colorIndex === index
-                              ? "ring-2 ring-offset-2 ring-primary"
-                              : "ring-1 ring-border hover:ring-primary"
-                          )}
-                          style={{ backgroundColor: color }}
-                          onClick={() => handleSelectionChange(product.id, "colorIndex", index)}
-                          aria-label={`Select color ${color}`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {colorSelected[product.id] && sizeQuantities[product.id] && (
-                    <div className="mt-4">
-                      <h4 className="text-sm font-medium mb-2">Kích Thước</h4>
-                      <div className="flex flex-col gap-2">
-                        {sizeQuantities[product.id].map((sizeObj, index) => (
+                  <div className="space-y-2">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Màu Sắc</label>
+                      <div className="flex gap-2">
+                        {product.colors.map((color: string, index: number) => (
                           <button
                             key={index}
-                            className={cn(
-                              "h-10 px-3 rounded border text-sm font-medium transition-all flex justify-between items-center",
-                              selections[product.id].sizeIndex === index
-                                ? "border-primary bg-primary/10 shadow-lg"
-                                : "border-border hover:border-primary/50"
-                            )}
-                            onClick={() => handleSelectionChange(product.id, "sizeIndex", index)}
-                          >
-                            <span>{sizeObj.size}</span>
-                            <span className="text-muted-foreground">{sizeObj.quantity}</span>
-                          </button>
+                            onClick={() => handleSelectionChange(product.id, "colorIndex", index)}
+                            className={`w-8 h-8 rounded-full border-2 ${
+                              selections[product.id]?.colorIndex === index
+                                ? "border-crocus-500"
+                                : "border-gray-300"
+                            }`}
+                            style={{ backgroundColor: `#${color}` }}
+                            title={`#${color}`}
+                          />
                         ))}
                       </div>
                     </div>
-                  )}
+                    {colorSelected[product.id] && sizeQuantities[product.id]?.length > 0 && (
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Kích Thước</label>
+                        <div className="flex gap-2 flex-wrap">
+                          {sizeQuantities[product.id].map((size: any, index: number) => (
+                            <button
+                              key={index}
+                              onClick={() => handleSelectionChange(product.id, "sizeIndex", index)}
+                              className={`px-3 py-1 border rounded-md text-sm ${
+                                selections[product.id]?.sizeIndex === index
+                                  ? "border-crocus-500 bg-crocus-50"
+                                  : "border-gray-300"
+                              } ${size.quantity === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                              disabled={size.quantity === 0}
+                            >
+                              {size.size} ({size.quantity} còn lại)
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {colorSelected[product.id] && !sizeQuantities[product.id]?.length && (
+                      <p className="text-sm text-red-500">Không có kích thước nào khả dụng cho màu này.</p>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
+
+          <div>
+            <h3 className="font-medium mb-2">Số Lượng</h3>
+            <div className="flex items-center border border-gray-200 rounded-md w-32">
+              <button 
+                onClick={() => setComboQuantity(prev => Math.max(1, prev - 1))}
+                className="px-3 py-2 text-gray-500 hover:text-gray-700"
+              >
+                -
+              </button>
+              <span className="flex-1 text-center">{comboQuantity}</span>
+              <button 
+                onClick={() => setComboQuantity(prev => prev + 1)}
+                className="px-3 py-2 text-gray-500 hover:text-gray-700"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <Button 
+              onClick={handleAddToCart}
+              className="w-full bg-crocus-600 hover:bg-crocus-700"
+            >
+              <ShoppingCart className="mr-2 h-4 w-4" /> Thêm Vào Giỏ Hàng
+            </Button>
+          </div>
         </div>
       </div>
-    </>
+
+      <div className="mb-12">
+        <Tabs defaultValue="details">
+          <TabsList className="mb-4">
+            <TabsTrigger value="details">Chi Tiết</TabsTrigger>
+            <TabsTrigger value="reviews">Đánh Giá</TabsTrigger>
+          </TabsList>
+          <TabsContent value="details" className="p-4 border rounded-lg">
+            <p className="text-gray-700">{combo.longDescription}</p>
+          </TabsContent>
+          <TabsContent value="reviews" className="p-4 border rounded-lg">
+            <div className="space-y-4">
+              {combo.reviews.map((review: any) => (
+                <div key={review.id} className="border-b pb-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-medium">{review.user}</span>
+                    <span className="text-sm text-gray-500">{review.date}</span>
+                  </div>
+                  <div className="flex mb-2">
+                    {[...Array(5)].map((_: any, i: number) => (
+                      <svg 
+                        key={i} 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        viewBox="0 0 24 24" 
+                        fill={i < review.rating ? "currentColor" : "none"}
+                        stroke={i < review.rating ? "none" : "currentColor"}
+                        className={`w-4 h-4 ${i < review.rating ? "text-yellow-400" : "text-gray-300"}`}
+                      >
+                        <path 
+                          fillRule="evenodd" 
+                          d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" 
+                          clipRule="evenodd" 
+                        />
+                      </svg>
+                    ))}
+                  </div>
+                  <p className="text-gray-700">{review.comment}</p>
+                </div>
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold mb-4">Combo Tương Tự</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+          {[
+            {
+              id: 2,
+              name: "Crocus Office Attire",
+              price: 159999,
+              image: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81",
+              rating: 4.6,
+              isFavorite: false,
+              productCount: 3
+            },
+            {
+              id: 3,
+              name: "Crocus Weekend Casual",
+              price: 99999,
+              image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c",
+              rating: 4.7,
+              isFavorite: false,
+              productCount: 3
+            }
+          ].map(combo => (
+            <Card key={combo.id} className="overflow-hidden">
+              <div className="relative aspect-video">
+                <Link to={`/combos/${combo.id}`}>
+                  <img
+                    src={combo.image}
+                    alt={combo.name}
+                    className="h-full w-full object-cover"
+                  />
+                </Link>
+                <button
+                  onClick={() => console.log(`Toggle favorite for related combo ${combo.id}`)}
+                  className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 hover:bg-white transition-colors"
+                >
+                  <Heart className={`h-5 w-5 ${combo.isFavorite ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
+                </button>
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                  <span className="inline-block bg-crocus-500 text-white px-2 py-1 rounded text-xs font-medium">
+                    {combo.productCount} Sản Phẩm
+                  </span>
+                </div>
+              </div>
+              <CardContent className="p-4">
+                <Link to={`/combos/${combo.id}`}>
+                  <h3 className="font-medium hover:text-crocus-600 transition-colors">{combo.name}</h3>
+                </Link>
+                <div className="flex justify-between items-center mt-2">
+                  <p className="font-semibold">{(combo.price/1000).toFixed(3)} VND</p>
+                  <div className="flex space-x-1">
+                    {[...Array(5)].map((_: any, i: number) => (
+                      <svg 
+                        key={i} 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        viewBox="0 0 24 24" 
+                        fill={i < Math.floor(combo.rating) ? "currentColor" : "none"}
+                        stroke={i < Math.floor(combo.rating) ? "none" : "currentColor"}
+                        className={`w-4 h-4 ${i < Math.floor(combo.rating) ? "text-yellow-400" : "text-gray-300"}`}
+                      >
+                        <path 
+                          fillRule="evenodd" 
+                          d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" 
+                          clipRule="evenodd" 
+                        />
+                      </svg>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 };
 
