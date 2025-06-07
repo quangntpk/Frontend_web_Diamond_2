@@ -296,7 +296,10 @@ const ThuongHieu = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Thương Hiệu</h1>
         </div>
-        <Button className="bg-purple hover:bg-purple-medium" onClick={() => setMoModalThem(true)}>
+       <Button 
+          className="bg-[#C600F5] hover:bg-[radial-gradient(circle_at_top,#C600F5,#FF00FF)] text-white border rounded-md" 
+          onClick={() => setMoModalThem(true)}
+        >
           <FaPlus className="mr-2 h-4 w-4" /> Thêm Thương Hiệu
         </Button>
       </div>
@@ -308,7 +311,7 @@ const ThuongHieu = () => {
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4 mb-6 justify-between items-start sm:items-center">
             <div className="relative w-full sm:w-auto">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-black" />
               <Input
                 type="search"
                 placeholder="Tìm kiếm thương hiệu..."

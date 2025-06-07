@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { HubConnectionBuilder, LogLevel, HubConnection } from "@microsoft/signalr";
+import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import {
   Table,
   TableBody,
@@ -10,17 +10,11 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
-  Plus,
   Search,
-  Filter,
-  Download,
-  ArrowUpDown,
-  Eye,
-  Printer,
-  Mail,
   Trash,
+  Eye,
+  Mail,
   MoreVertical,
   CheckCircle,
   XCircle,
@@ -44,7 +38,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
 import {
   Dialog,
@@ -106,30 +99,26 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 const AdminContact = () => {
   const [lienHeList, setLienHeList] = useState<LienHe[]>([]);
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
-  const [selectedContact, setSelectedContact] = useState<LienHe | null>(null);
-  const [supportModalOpen, setSupportModalOpen] = useState<boolean>(false);
-  const [supportMessage, setSupportMessage] = useState<string>("");
-  const [deleteContact, setDeleteContact] = useState<LienHe | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [isSending, setIsSending] = useState<boolean>(false);
-  const [isLoadingAI, setIsLoadingAI] = useState<boolean>(false);
-  const [aiError, setAiError] = useState<string>("");
-  const [selectedLienHeIds, setSelectedLienHeIds] = useState<number[]>([]);
-  const [phanLoaiData, setPhanLoaiData] = useState<{ [key: string]: number }>({
-    tích_cực: 0,
-    tiêu_cực: 0,
-    bình_thường: 0,
-  });
-  const [phanLoaiTheoNgay, setPhanLoaiTheoNgay] = useState<{
-    [date: string]: { tích_cực: number; tiêu_cực: number; bình_thường: number };
-  }>({});
-  const [statusLoading, setStatusLoading] = useState<{ [key: number]: boolean }>({});
-  const [confirmStatusChange, setConfirmStatusChange] = useState<{ contact: LienHe; newStatus: string } | null>(null);
-  const hubConnection = useRef<HubConnection | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [selectedContact, setSelectedContact] = useState(null);
+  const [supportModalOpen, setSupportModalOpen] = useState(false);
+  const [supportMessage, setSupportMessage] = useState("");
+  const [deleteContact, setDeleteContact] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isSending, setIsSending] = useState(false);
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
+  const [aiError, setAiError] = useState("");
+  const [selectedLienHeIds, setSelectedLienHeIds] = useState([]);
+  const [phanLoaiData, setPhanLoaiData] = useState({ tích_cực: 0, tiêu_cực: 0, bình_thường: 0 });
+  const [phanLoaiTheoNgay, setPhanLoaiTheoNgay] = useState({});
+  const [statusLoading, setStatusLoading] = useState({});
+  const [confirmStatusChange, setConfirmStatusChange] = useState(null);
+  const hubConnection = useRef(null);
+  const searchTimeout = useRef(null);
 
   useEffect(() => {
     fetchLienHe();
@@ -140,22 +129,22 @@ const AdminContact = () => {
       .configureLogging(LogLevel.Information)
       .build();
 
-    connection.on("ReceiveLienHeAdded", (newLienHe: LienHe) => {
+    connection.on("ReceiveLienHeAdded", (newLienHe) => {
       setLienHeList((prev) => [...prev, newLienHe].sort((a, b) => b.maLienHe - a.maLienHe));
     });
 
-    connection.on("ReceiveLienHeUpdated", (updatedLienHe: LienHe) => {
+    connection.on("ReceiveLienHeUpdated", (updatedLienHe) => {
       setLienHeList((prev) =>
         prev.map((lh) => (lh.maLienHe === updatedLienHe.maLienHe ? updatedLienHe : lh))
       );
     });
 
-    connection.on("ReceiveLienHeDeleted", (maLienHe: number) => {
+    connection.on("ReceiveLienHeDeleted", (maLienHe) => {
       setLienHeList((prev) => prev.filter((lh) => lh.maLienHe !== maLienHe));
       setSelectedLienHeIds((prev) => prev.filter((id) => id !== maLienHe));
     });
 
-    connection.on("ReceiveLienHeDeletedMultiple", (ids: number[]) => {
+    connection.on("ReceiveLienHeDeletedMultiple", (ids) => {
       setLienHeList((prev) => prev.filter((lh) => !ids.includes(lh.maLienHe)));
       setSelectedLienHeIds((prev) => prev.filter((id) => !ids.includes(id)));
     });
@@ -172,6 +161,21 @@ const AdminContact = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
+    searchTimeout.current = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+
+    return () => {
+      if (searchTimeout.current) {
+        clearTimeout(searchTimeout.current);
+      }
+    };
+  }, [searchTerm]);
+
   const fetchLienHe = async () => {
     setLoading(true);
     try {
@@ -180,11 +184,11 @@ const AdminContact = () => {
       const data = await response.json();
       setLienHeList(data);
     } catch (err) {
-      setError((err as Error).message);
+      setError(err.message);
       Swal.fire({
         icon: "error",
         title: "Lỗi",
-        text: "Lỗi khi tải danh sách liên hệ: " + (err as Error).message,
+        text: "Lỗi khi tải danh sách liên hệ: " + err.message,
         timer: 3000,
         showConfirmButton: false,
       });
@@ -201,9 +205,7 @@ const AdminContact = () => {
       const lienHeList = await response.json();
 
       const phanLoai = { tích_cực: 0, tiêu_cực: 0, bình_thường: 0 };
-      const phanLoaiTheoNgayTemp: {
-        [date: string]: { tích_cực: number; tiêu_cực: number; bình_thường: number };
-      } = {};
+      const phanLoaiTheoNgayTemp = {};
 
       for (const lienHe of lienHeList) {
         const res = await fetch(
@@ -233,11 +235,11 @@ const AdminContact = () => {
       setPhanLoaiData(phanLoai);
       setPhanLoaiTheoNgay(phanLoaiTheoNgayTemp);
     } catch (err) {
-      setError((err as Error).message);
+      setError(err.message);
       Swal.fire({
         icon: "error",
         title: "Lỗi",
-        text: "Lỗi khi tải dữ liệu thống kê: " + (err as Error).message,
+        text: "Lỗi khi tải dữ liệu thống kê: " + err.message,
         timer: 3000,
         showConfirmButton: false,
       });
@@ -251,15 +253,15 @@ const AdminContact = () => {
       .sort((a, b) => b.maLienHe - a.maLienHe)
       .filter(
         (l) =>
-          l.hoTen?.toLowerCase().includes(searchTerm) ||
-          l.email?.toLowerCase().includes(searchTerm) ||
-          l.sdt?.toLowerCase().includes(searchTerm)
+          l.hoTen?.toLowerCase().includes(debouncedSearchTerm) ||
+          l.email?.toLowerCase().includes(debouncedSearchTerm) ||
+          l.sdt?.toLowerCase().includes(debouncedSearchTerm)
       );
     if (statusFilter !== "all") {
       filtered = filtered.filter((l) => String(l.trangThai) === statusFilter);
     }
     return filtered;
-  }, [lienHeList, searchTerm, statusFilter]);
+  }, [lienHeList, debouncedSearchTerm, statusFilter]);
 
   const totalPages = Math.ceil(sortedAndFilteredLienHe.length / ITEMS_PER_PAGE);
   const paginatedLienHe = sortedAndFilteredLienHe.slice(
@@ -271,17 +273,17 @@ const AdminContact = () => {
     selectedLienHeIds.includes(lienHe.maLienHe)
   );
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearch = (e) => {
     setSearchTerm(e.target.value.toLowerCase());
     setCurrentPage(1);
   };
 
-  const handleStatusFilterChange = (value: string) => {
+  const handleStatusFilterChange = (value) => {
     setStatusFilter(value);
     setCurrentPage(1);
   };
 
-  const openConfirmStatusChange = (contact: LienHe, newStatus: string) => {
+  const openConfirmStatusChange = (contact, newStatus) => {
     setConfirmStatusChange({ contact, newStatus });
   };
 
@@ -307,15 +309,13 @@ const AdminContact = () => {
         text: "Cập nhật trạng thái thành công!",
         timer: 3000,
         showConfirmButton: false,
-      }).then(() => {
-        fetchLienHe();
       });
     } catch (err) {
-      setError((err as Error).message);
+      setError(err.message);
       Swal.fire({
         icon: "error",
         title: "Lỗi",
-        text: "Lỗi khi cập nhật trạng thái: " + (err as Error).message,
+        text: "Lỗi khi cập nhật trạng thái: " + err.message,
         timer: 3000,
         showConfirmButton: false,
       });
@@ -325,7 +325,7 @@ const AdminContact = () => {
     }
   };
 
-  const handleSelectLienHe = (id: number) => {
+  const handleSelectLienHe = (id) => {
     setSelectedLienHeIds((prev) =>
       prev.includes(id) ? prev.filter((selectedId) => selectedId !== id) : [...prev, id]
     );
@@ -343,7 +343,7 @@ const AdminContact = () => {
   };
 
   const confirmDelete = async () => {
-    if (selectedLienHeIds.length === 0) {
+    if (!deleteContact && selectedLienHeIds.length === 0) {
       Swal.fire({
         icon: "error",
         title: "Lỗi",
@@ -354,14 +354,22 @@ const AdminContact = () => {
       setDeleteContact(null);
       return;
     }
+
     try {
-      const response = await fetch(`${API_URL}/api/LienHe/DeleteMultiple`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(selectedLienHeIds),
-      });
-      if (!response.ok) throw new Error("Lỗi khi xóa liên hệ");
-      setSelectedLienHeIds([]);
+      if (selectedLienHeIds.length > 0) {
+        const response = await fetch(`${API_URL}/api/LienHe/DeleteMultiple`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(selectedLienHeIds),
+        });
+        if (!response.ok) throw new Error("Lỗi khi xóa nhiều liên hệ");
+        setSelectedLienHeIds([]);
+      } else if (deleteContact) {
+        const response = await fetch(`${API_URL}/api/LienHe/${deleteContact.maLienHe}`, {
+          method: "DELETE",
+        });
+        if (!response.ok) throw new Error("Lỗi khi xóa liên hệ");
+      }
       setDeleteContact(null);
       setCurrentPage(1);
       Swal.fire({
@@ -372,18 +380,18 @@ const AdminContact = () => {
         showConfirmButton: false,
       });
     } catch (err) {
-      setError((err as Error).message);
+      setError(err.message);
       Swal.fire({
         icon: "error",
         title: "Lỗi",
-        text: "Lỗi khi xóa liên hệ: " + (err as Error).message,
+        text: "Lỗi khi xóa liên hệ: " + err.message,
         timer: 3000,
         showConfirmButton: false,
       });
     }
   };
 
-  const openSupportModal = (contact: LienHe) => {
+  const openSupportModal = (contact) => {
     setSelectedContact(contact);
     setSupportModalOpen(true);
     setSupportMessage("");
@@ -417,7 +425,6 @@ const AdminContact = () => {
       });
       if (!response.ok) throw new Error("Lỗi khi gửi email hỗ trợ");
 
-      // Update contact status to "Đã xử lý" (trangThai = 1) after successful send
       if (selectedContact) {
         const updateResponse = await fetch(`${API_URL}/api/LienHe/${selectedContact.maLienHe}`, {
           method: "PUT",
@@ -425,9 +432,6 @@ const AdminContact = () => {
           body: JSON.stringify({ ...selectedContact, trangThai: 1 }),
         });
         if (!updateResponse.ok) throw new Error("Lỗi khi cập nhật trạng thái");
-
-        // Refresh the contact list to reflect the updated status
-        fetchLienHe();
       }
 
       Swal.fire({
@@ -439,11 +443,11 @@ const AdminContact = () => {
       });
       closeSupportModal();
     } catch (err) {
-      setError((err as Error).message);
+      setError(err.message);
       Swal.fire({
         icon: "error",
         title: "Lỗi",
-        text: "Lỗi khi gửi email hỗ trợ: " + (err as Error).message,
+        text: "Lỗi khi gửi email hỗ trợ: " + err.message,
         timer: 3000,
         showConfirmButton: false,
       });
@@ -468,13 +472,13 @@ const AdminContact = () => {
         throw new Error(data.errorMessage || "Không thể nhận phản hồi từ AI");
       }
     } catch (err) {
-      setAiError((err as Error).message);
+      setAiError(err.message);
     } finally {
       setIsLoadingAI(false);
     }
   };
 
-  const handlePageChange = (page: number) => {
+  const handlePageChange = (page) => {
     setCurrentPage(page);
   };
 
@@ -562,7 +566,7 @@ const AdminContact = () => {
   };
 
   const totalLienHeTangGiamData = useMemo(() => {
-    const countsByDate: { [date: string]: number } = {};
+    const countsByDate = {};
     lienHeList.forEach((lienHe) => {
       const date = new Date(lienHe.ngayTao).toISOString().split("T")[0];
       countsByDate[date] = (countsByDate[date] || 0) + 1;
@@ -637,7 +641,7 @@ const AdminContact = () => {
             {selectedLienHeIds.length > 0 && (
               <Button
                 variant="destructive"
-                onClick={() => setDeleteContact({} as LienHe)}
+                onClick={() => setDeleteContact({})}
                 className="bg-[#9b87f5] text-white hover:bg-[#8a76e3]"
               >
                 <Trash className="h-4 w-4 mr-2" /> Xóa nhiều
@@ -867,26 +871,12 @@ const AdminContact = () => {
               <DialogTitle>Chi tiết liên hệ & Gửi hỗ trợ</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <p>
-                <strong>Họ Tên:</strong> {selectedContact.hoTen}
-              </p>
-              <p>
-                <strong>Email:</strong> {selectedContact.email}
-              </p>
-              <p>
-                <strong>Số điện thoại:</strong> {selectedContact.sdt}
-              </p>
-              <p>
-                <strong>Nội dung:</strong> {selectedContact.noiDung}
-              </p>
-              <p>
-                <strong>Ngày tạo:</strong>{" "}
-                {new Date(selectedContact.ngayTao).toLocaleString()}
-              </p>
-              <p>
-                <strong>Trạng thái:</strong>{" "}
-                {selectedContact.trangThai === 0 ? "Chưa xử lý" : "Đã xử lý"}
-              </p>
+              <p><strong>Họ Tên:</strong> {selectedContact.hoTen}</p>
+              <p><strong>Email:</strong> {selectedContact.email}</p>
+              <p><strong>Số điện thoại:</strong> {selectedContact.sdt}</p>
+              <p><strong>Nội dung:</strong> {selectedContact.noiDung}</p>
+              <p><strong>Ngày tạo:</strong> {new Date(selectedContact.ngayTao).toLocaleString()}</p>
+              <p><strong>Trạng thái:</strong> {selectedContact.trangThai === 0 ? "Chưa xử lý" : "Đã xử lý"}</p>
               <textarea
                 value={supportMessage}
                 onChange={(e) => setSupportMessage(e.target.value)}
@@ -924,13 +914,9 @@ const AdminContact = () => {
             </DialogHeader>
             <div className="space-y-4">
               {selectedLienHeIds.length > 0 ? (
-                <p>
-                  Bạn có chắc chắn muốn xóa {selectedLienHeIds.length} liên hệ đã chọn không?
-                </p>
+                <p>Bạn có chắc chắn muốn xóa {selectedLienHeIds.length} liên hệ đã chọn không?</p>
               ) : (
-                <p>
-                  Bạn có chắc chắn muốn xóa liên hệ của <strong>{deleteContact.hoTen}</strong> không?
-                </p>
+                <p>Bạn có chắc chắn muốn xóa liên hệ của <strong>{deleteContact.hoTen}</strong> không?</p>
               )}
             </div>
             <DialogFooter className="flex justify-end space-x-2 mt-4">
@@ -952,9 +938,7 @@ const AdminContact = () => {
               <DialogTitle>Xác nhận thay đổi trạng thái</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <p>
-                Bạn có chắc chắn muốn thay đổi trạng thái của liên hệ <strong>{confirmStatusChange.contact.hoTen}</strong> không?
-              </p>
+              <p>Bạn có chắc chắn muốn thay đổi trạng thái của liên hệ <strong>{confirmStatusChange.contact.hoTen}</strong> không?</p>
             </div>
             <DialogFooter className="flex justify-end space-x-2 mt-4">
               <Button variant="ghost" onClick={closeConfirmStatusChange} className="flex items-center gap-2 bg-[#e7e4f5]">

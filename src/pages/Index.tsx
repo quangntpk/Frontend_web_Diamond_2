@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import HeroSection from "@/components/default/HeroSection";
+import Newsletter from "@/components/default/Newsletter";
+import Features from "@/components/default/Features";
 import {
   Carousel,
   CarouselContent,
@@ -474,137 +477,10 @@ const Index = () => {
   return (
     <div className="space-y-16 py-6">
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="bg-gradient-to-r from-crocus-500/20 to-crocus-200/40 rounded-xl p-8 md:p-16 flex flex-col md:flex-row items-center">
-          <div className="md:w-1/2 space-y-6 text-center md:text-left">
-            <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-              Khám phá bộ sưu tập{" "}
-              <span className="bg-gradient-to-r from-crocus-500 to-crocus-700 bg-clip-text text-transparent">
-                FashionHub
-              </span>{" "}
-              2025
-            </h1>
-            <p className="text-lg text-gray-700 max-w-lg">
-              Nâng tầm phong cách của bạn với sản phẩm hot nhất năm 2025. Bộ sưu tập mới của chúng
-              tôi kết hợp sự thanh lịch với thiết kế đương đại.
-            </p>
-            <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-              <Button asChild className="bg-crocus-500 hover:bg-crocus-600">
-                <Link to="/products">Mua sắm ngay</Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link to="/products/new">Hàng mới về</Link>
-              </Button>
-              <Button asChild variant="outline" className="flex gap-2 items-center">
-                <Link to="/user/cart">
-                  <ShoppingCart className="h-4 w-4" />
-                  <span>Xem giỏ hàng</span>
-                </Link>
-              </Button>
-            </div>
-          </div>
-          <div className="md:w-1/2 mt-8 md:mt-0">
-            <Carousel className="w-full">
-              <CarouselContent>
-                {combos.map((combo) => (
-                  <CarouselItem key={combo.id} className="md:basis-1/1">
-                    <Link to={`/combos/${combo.id}`}>
-                      <div className="relative rounded-lg overflow-hidden">
-                        <img
-                          src={
-                            combo.imageSrc
-                              ? `data:image/jpeg;base64,${combo.imageSrc}`
-                              : "/placeholder-image.jpg"
-                          }
-                          alt={combo.name}
-                          className="w-full h-[300px] object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-4">
-                          <h3 className="text-xl text-white font-semibold">{combo.name}</h3>
-                          <p className="text-white/80">{formatter.format(combo.price)}</p>
-                        </div>
-                      </div>
-                    </Link>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="left-2" />
-              <CarouselNext className="right-2" />
-            </Carousel>
-          </div>
-        </div>
-      </section>
+      <HeroSection />
 
       {/* Features */}
-      <section className="py-12">
-        <h2 className="text-3xl font-bold text-center mb-12">Tại sao chọn FashionHub</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center">
-            <div className="w-12 h-12 bg-crocus-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                className="w-6 h-6 text-crocus-600"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Chất lượng cao cấp</h3>
-            <p className="text-gray-600">
-              Được làm từ những chất liệu tốt nhất cho sự thoải mái và độ bền
-            </p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center">
-            <div className="w-12 h-12 bg-crocus-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                className="w-6 h-6 text-crocus-600"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Giao hàng nhanh</h3>
-            <p className="text-gray-600">Vận chuyển nhanh chóng và đổi trả dễ dàng cho tất cả đơn hàng</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center">
-            <div className="w-12 h-12 bg-crocus-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                className="w-6 h-6 text-crocus-600"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
-                />
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Thời trang bền vững</h3>
-            <p className="text-gray-600">
-              Quy trình và vật liệu thân thiện với môi trường cho một hành tinh tốt đẹp hơn
-            </p>
-          </div>
-        </div>
-      </section>
+      <Features />
 
       {/* Featured Products */}
       <section className="py-12">
@@ -679,22 +555,7 @@ const Index = () => {
       </section> */}
 
       {/* Newsletter */}
-      <section className="py-12 bg-crocus-50 rounded-xl">
-        <div className="text-center max-w-xl mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-4">Đăng ký nhận tin tức</h2>
-          <p className="text-gray-600 mb-6">
-            Cập nhật các bộ sưu tập mới nhất và ưu đãi độc quyền
-          </p>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <input
-              type="email"
-              placeholder="Nhập email của bạn"
-              className="flex-grow px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-crocus-500"
-            />
-            <Button className="bg-crocus-500 hover:bg-crocus-600">Đăng ký</Button>
-          </div>
-        </div>
-      </section>
+      <Newsletter />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +34,9 @@ import {
   BarChart,
   ChevronLeft,
   ChevronRight,
+  RotateCcw,
+  XCircle,
+  CheckCircle,
 } from "lucide-react";
 import {
   Table,
@@ -140,14 +143,16 @@ const AdminUsers = () => {
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [activeTab, setActiveTab] = useState("danhSachTaiKhoan");
   const pageSize = 10;
   const [defaultAvatar, setDefaultAvatar] = useState<string | null>(null);
   const [openModal, setOpenModal] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [updateChiTietModalOpen, setUpdateChiTietModalOpen] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [confirmationAction, setConfirmationAction] = useState<"hide" | "restore" | "delete" | null>(null);
+  const [confirmationUser, setConfirmationUser] = useState<Account | null>(null);
   const [selectedUser, setSelectedUser] = useState<Account | null>(null);
-  const [accountToDelete, setAccountToDelete] = useState<Account | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [newUser, setNewUser] = useState({
     hoTen: "",
@@ -237,19 +242,11 @@ const AdminUsers = () => {
     ],
   };
 
-  const debounce = (func: (query: string) => void, delay: number) => {
-    let timeoutId: NodeJS.Timeout;
-    return (query: string) => {
-      if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => func(query), delay);
-    };
-  };
-
-  const fetchUsers = useCallback(async (query: string) => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(`${API_URL}/api/NguoiDung${query ? `?searchTerm=${query}` : ""}`);
+      const response = await fetch(`${API_URL}/api/NguoiDung`);
       if (!response.ok) throw new Error("Lỗi khi tải danh sách người dùng");
       const data: Account[] = await response.json();
       setUsers(data);
@@ -260,11 +257,9 @@ const AdminUsers = () => {
     }
   }, []);
 
-  const debouncedFetchUsers = useMemo(() => debounce(fetchUsers, 300), [fetchUsers]);
-
   useEffect(() => {
-    debouncedFetchUsers(searchQuery);
-  }, [searchQuery, debouncedFetchUsers]);
+    fetchUsers();
+  }, [fetchUsers]);
 
   const fetchDefaultAvatar = async () => {
     try {
@@ -399,11 +394,17 @@ const AdminUsers = () => {
       user.taiKhoan?.toLowerCase().includes(searchLower);
     const matchesRole =
       roleFilter === "all" || getRoleString(user.vaiTro) === roleFilter;
-    const matchesStatus =
-      statusFilter === "all" ||
-      (statusFilter === "active" && user.trangThai === 0) ||
-      (statusFilter === "locked" && user.trangThai === 1);
-    return matchesSearch && matchesRole && matchesStatus;
+
+    if (activeTab === "danhSachTaiKhoan") {
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && user.trangThai === 0) ||
+        (statusFilter === "locked" && user.trangThai === 1);
+      return matchesSearch && matchesRole && matchesStatus && (user.trangThai === 0 || user.trangThai === 1);
+    } else if (activeTab === "khoiPhuc") {
+      return matchesSearch && matchesRole && user.trangThai === 2;
+    }
+    return false;
   });
 
   const sortedUsers = filteredUsers.sort(
@@ -415,6 +416,10 @@ const AdminUsers = () => {
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
 
   const validateHoTen = (hoTen: string) => {
     if (hoTen.length <= 5) return "Họ tên phải dài hơn 5 ký tự";
@@ -541,6 +546,8 @@ const AdminUsers = () => {
         icon: "error",
         title: "Lỗi",
         text: "Không tìm thấy mã người dùng",
+        timer: 3000,
+        showConfirmButton: false,
       });
       return;
     }
@@ -576,17 +583,14 @@ const AdminUsers = () => {
     setConfirmStatusModalOpen(true);
   };
 
-  const openDeleteModal = (user: Account) => {
-    setAccountToDelete(user);
-    setDeleteModalOpen(true);
-  };
-
   const confirmStatusChange = async () => {
     if (!userToChangeStatus || newStatus === null) {
       Swal.fire({
         icon: "error",
         title: "Lỗi",
         text: "Không thể xác định người dùng hoặc trạng thái",
+        timer: 3000,
+        showConfirmButton: false,
       });
       return;
     }
@@ -622,7 +626,7 @@ const AdminUsers = () => {
         throw new Error(errorData.message || "Lỗi khi cập nhật trạng thái");
       }
 
-      await fetchUsers(searchQuery);
+      await fetchUsers();
       Swal.fire({
         icon: "success",
         title: "Thành công",
@@ -635,6 +639,8 @@ const AdminUsers = () => {
         icon: "error",
         title: "Lỗi",
         text: (err as Error).message || "Lỗi khi cập nhật trạng thái",
+        timer: 3000,
+        showConfirmButton: false,
       });
     } finally {
       setIsSubmitting(false);
@@ -678,8 +684,7 @@ const AdminUsers = () => {
       });
 
       if (!response.ok) throw new Error("Lỗi khi thêm người dùng");
-      const addedUser = await response.json();
-      setUsers([...users, addedUser]);
+      await fetchUsers();
       setOpenModal(false);
       setNewUser({
         hoTen: "",
@@ -700,29 +705,39 @@ const AdminUsers = () => {
         icon: "error",
         title: "Lỗi",
         text: (err as Error).message || "Lỗi khi thêm người dùng",
+        timer: 3000,
+        showConfirmButton: false,
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeleteUser = (user: Account) => {
-    openDeleteModal(user);
-  };
-
-  const confirmDelete = async () => {
-    if (!accountToDelete) return;
-    setIsSubmitting(true);
+  const performAction = async () => {
+    if (!confirmationUser) return;
     try {
-      const response = await fetch(`${API_URL}/api/NguoiDung/${accountToDelete.maNguoiDung}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) throw new Error("Lỗi khi xóa người dùng");
-      setUsers(users.filter((user) => user.maNguoiDung !== accountToDelete.maNguoiDung));
+      if (confirmationAction === "hide") {
+        await fetch(`${API_URL}/api/NguoiDung/${confirmationUser.maNguoiDung}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...confirmationUser, trangThai: 2 }),
+        });
+      } else if (confirmationAction === "restore") {
+        await fetch(`${API_URL}/api/NguoiDung/${confirmationUser.maNguoiDung}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...confirmationUser, trangThai: 0 }),
+        });
+      } else if (confirmationAction === "delete") {
+        await fetch(`${API_URL}/api/NguoiDung/${confirmationUser.maNguoiDung}`, {
+          method: "DELETE",
+        });
+      }
+      await fetchUsers();
       Swal.fire({
         icon: "success",
         title: "Thành công",
-        text: "Xóa người dùng thành công",
+        text: `Đã ${confirmationAction === "hide" ? "xóa" : confirmationAction === "restore" ? "khôi phục" : "xóa vĩnh viễn"} người dùng thành công`,
         timer: 3000,
         showConfirmButton: false,
       });
@@ -730,12 +745,14 @@ const AdminUsers = () => {
       Swal.fire({
         icon: "error",
         title: "Lỗi",
-        text: (err as Error).message || "Lỗi khi xóa người dùng",
+        text: (err as Error).message,
+        timer: 3000,
+        showConfirmButton: false,
       });
     } finally {
-      setIsSubmitting(false);
-      setDeleteModalOpen(false);
-      setAccountToDelete(null);
+      setConfirmationOpen(false);
+      setConfirmationUser(null);
+      setConfirmationAction(null);
     }
   };
 
@@ -761,6 +778,8 @@ const AdminUsers = () => {
         icon: "error",
         title: "Lỗi",
         text: "Vui lòng chọn file hình ảnh",
+        timer: 3000,
+        showConfirmButton: false,
       });
     }
   };
@@ -804,6 +823,8 @@ const AdminUsers = () => {
         icon: "error",
         title: "Lỗi",
         text: "Không tìm thấy mã người dùng để cập nhật",
+        timer: 3000,
+        showConfirmButton: false,
       });
       return;
     }
@@ -851,7 +872,7 @@ const AdminUsers = () => {
         throw new Error(responseData.message || "Lỗi khi cập nhật chi tiết người dùng");
       }
 
-      await fetchUsers(searchQuery);
+      await fetchUsers();
       Swal.fire({
         icon: "success",
         title: "Thành công",
@@ -865,6 +886,8 @@ const AdminUsers = () => {
         icon: "error",
         title: "Lỗi",
         text: (err as Error).message || "Lỗi khi cập nhật chi tiết người dùng",
+        timer: 3000,
+        showConfirmButton: false,
       });
     } finally {
       setIsSubmitting(false);
@@ -1018,10 +1041,13 @@ const AdminUsers = () => {
         </Dialog>
       </div>
 
-      <Tabs defaultValue="danhSachTaiKhoan" className="w-full">
-        <TabsList className="grid w-full md:w-auto grid-cols-2 md:grid-cols-2 gap-1">
+      <Tabs defaultValue="danhSachTaiKhoan" value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full md:w-auto grid-cols-3 md:grid-cols-3 gap-1">
           <TabsTrigger value="danhSachTaiKhoan" className="flex items-center gap-2">
             <User className="h-4 w-4" /> Danh sách tài khoản
+          </TabsTrigger>
+          <TabsTrigger value="khoiPhuc" className="flex items-center gap-2">
+            <RotateCcw className="h-4 w-4" /> Khôi phục
           </TabsTrigger>
           <TabsTrigger value="danhSachThongKe" className="flex items-center gap-2">
             <BarChart className="h-4 w-4" /> Danh sách thống kê
@@ -1085,7 +1111,7 @@ const AdminUsers = () => {
                   <TableHead>Tài Khoản</TableHead>
                   <TableHead>Vai Trò</TableHead>
                   <TableHead>Trạng Thái</TableHead>
-                  <TableHead className="w-[120px]">Hoạt động</TableHead>
+                  <TableHead className="w-[120px]">Hành động</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1148,17 +1174,18 @@ const AdminUsers = () => {
                             <DropdownMenuItem onClick={() => openDiaChiModal(user)} className="text-gray-700">
                               <MapPin className="mr-2 h-4 w-4 text-gray-600" /> Địa chỉ
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openViewModal(user)} className="text-gray-700">
-                              <Eye className="mr-2 h-4 w-4 text-green-600" /> Xem
+                            <DropdownMenuItem onClick={() => openViewModal(user)} className="text-green-700">
+                              <Eye className="mr-2 h-4 w-4" /> Xem
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openUpdateChiTietModal(user)} className="text-gray-700">
-                              <Edit className="mr-2 h-4 w-4 text-blue-600" /> Sửa
+                            <DropdownMenuItem onClick={() => openUpdateChiTietModal(user)} className="text-blue-700">
+                              <Edit className="mr-2 h-4 w-4" /> Sửa
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-red-600"
-                              onClick={() => handleDeleteUser(user)}
-                            >
-                              <Trash className="mr-2 h-4 w-4 text-red-600" /> Xóa
+                            <DropdownMenuItem onClick={() => {
+                              setConfirmationUser(user);
+                              setConfirmationAction("hide");
+                              setConfirmationOpen(true);
+                            }} className="text-red-700">
+                              <Trash className="mr-2 h-4 w-4" /> Xóa
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -1212,10 +1239,13 @@ const AdminUsers = () => {
                           <Edit className="mr-2 h-4 w-4" /> Sửa chi tiết
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => handleDeleteUser(user)}
+                          onClick={() => {
+                            setConfirmationUser(user);
+                            setConfirmationAction("hide");
+                            setConfirmationOpen(true);
+                          }}
                         >
-                          <Trash className="mr-2 h-4 w-4" /> Xóa
+                          <Trash className="mr-2 h-4 w-4" /> Ẩn
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -1252,7 +1282,6 @@ const AdminUsers = () => {
                 <ChevronLeft className="h-4 w-4 mr-2" />
                 Trước
               </Button>
-
               {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
                 <Button
                   key={page}
@@ -1263,7 +1292,262 @@ const AdminUsers = () => {
                   {page}
                 </Button>
               ))}
+              <Button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                variant="outline"
+                className="flex items-center"
+              >
+                Sau
+                <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          )}
+        </TabsContent>
 
+        <TabsContent value="khoiPhuc">
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
+            <div className="relative flex-grow">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Tìm kiếm người dùng..."
+                className="pl-8 pr-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            <div className="relative">
+              <User className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="border rounded-md p-2 pl-8"
+              >
+                <option value="all">Tất cả vai trò</option>
+                <option value="admin">Admin</option>
+                <option value="nhanvien">Nhân viên</option>
+                <option value="nguoidung">Người dùng</option>
+              </select>
+            </div>
+            <div className="relative">
+              <User className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="border rounded-md p-2 pl-8"
+              >
+                <option value="all">Tất cả trạng thái</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="hidden md:block border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]">STT</TableHead>
+                  <TableHead className="w-[120px]">Hình Ảnh</TableHead>
+                  <TableHead>Họ Tên</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Tài Khoản</TableHead>
+                  <TableHead>Vai Trò</TableHead>
+                  <TableHead>Trạng Thái</TableHead>
+                  <TableHead className="w-[120px]">Hành động</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {currentUsers.length > 0 ? (
+                  currentUsers.map((user, index) => (
+                    <TableRow key={user.maNguoiDung} className="hover:bg-muted/50">
+                      <TableCell align="center">{(currentPage - 1) * pageSize + index + 1}</TableCell>
+                      <TableCell align="center">
+                        <img
+                          src={
+                            user.hinhAnh
+                              ? user.hinhAnh.startsWith("data:image")
+                                ? user.hinhAnh
+                                : `data:image/png;base64,${user.hinhAnh}`
+                              : defaultAvatar || "https://gockienthuc.edu.vn/wp-content/uploads/2024/07/hinh-anh-avatar-trang-mac-dinh-doc-dao-khong-lao-nhao_6690f0076072b.webp"
+                          }
+                          alt="Avatar"
+                          className="w-16 h-16 rounded-full mx-auto mt-4 object-cover cursor-pointer hover:scale-105 transition-transform"
+                          onClick={() => openViewModal(user)}
+                        />
+                      </TableCell>
+                      <TableCell>{user.hoTen}</TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>{user.taiKhoan || ""}</TableCell>
+                      <TableCell>
+                        {user.vaiTro === 1 ? "Admin" : user.vaiTro === 2 ? "Nhân viên" : "Người dùng"}
+                      </TableCell>
+                      <TableCell>
+                        <label className="relative inline-block w-[60px] h-[34px]">
+                          <input
+                            type="checkbox"
+                            className="opacity-0 w-0 h-0"
+                            checked={user.trangThai === 0}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setConfirmationUser(user);
+                                setConfirmationAction("restore");
+                                setConfirmationOpen(true);
+                              } else {
+                                openConfirmStatusModal(user, 1);
+                              }
+                            }}
+                            disabled={isSubmitting}
+                          />
+                          <span
+                            className={`absolute cursor-pointer inset-0 rounded-full transition-all duration-300 ease-in-out
+                              before:absolute before:h-[30px] before:w-[30px] before:left-[2px] before:bottom-[2px]
+                              before:bg-white before:rounded-full before:shadow-md before:transition-all before:duration-300 before:ease-in-out
+                              ${
+                                user.trangThai === 0
+                                  ? "bg-crocus-500 before:translate-x-[26px]"
+                                  : "bg-gray-400"
+                              } hover:scale-110 shadow-sm hover:shadow-md`}
+                          ></span>
+                          <span className="sr-only">
+                            {user.trangThai === 0 ? "Hoạt động" : "Ẩn"}
+                          </span>
+                        </label>
+                      </TableCell>
+                      <TableCell align="center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => openViewModal(user)} className="text-green-700">
+                              <Eye className="mr-2 h-4 w-4" /> Chi tiết
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              setConfirmationUser(user);
+                              setConfirmationAction("restore");
+                              setConfirmationOpen(true);
+                            }} className="text-blue-700">
+                              <RotateCcw className="mr-2 h-4 w-4" /> Khôi phục
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              setConfirmationUser(user);
+                              setConfirmationAction("delete");
+                              setConfirmationOpen(true);
+                            }} className="text-red-700">
+                              <Trash className="mr-2 h-4 w-4" /> Xóa vĩnh viễn
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
+                      Không có người dùng ẩn nào để hiển thị.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          <div className="md:hidden space-y-4">
+            {currentUsers.map((user) => (
+              <Card key={user.maNguoiDung}>
+                <CardHeader className="p-4 pb-2">
+                  <CardTitle className="text-base flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={
+                          user.hinhAnh
+                            ? user.hinhAnh.startsWith("data:image")
+                              ? user.hinhAnh
+                              : `data:image/png;base64,${user.hinhAnh}`
+                            : defaultAvatar || "https://gockienthuc.edu.vn/wp-content/uploads/2024/07/hinh-anh-avatar-trang-mac-dinh-doc-dao-khong-lao-nhao_6690f0076072b.webp"
+                        }
+                        alt="Avatar"
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                      <span>{user.hoTen}</span>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openViewModal(user)}>
+                          <Eye className="mr-2 h-4 w-4" /> Chi tiết
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          setConfirmationUser(user);
+                          setConfirmationAction("restore");
+                          setConfirmationOpen(true);
+                        }}>
+                          <RotateCcw className="mr-2 h-4 w-4" /> Khôi phục
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setConfirmationUser(user);
+                            setConfirmationAction("delete");
+                            setConfirmationOpen(true);
+                          }}
+                        >
+                          <Trash className="mr-2 h-4 w-4" /> Xóa vĩnh viễn
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0 space-y-1">
+                  <div className="text-sm text-muted-foreground">{user.email}</div>
+                  <div className="flex justify-between text-sm">
+                    <span>{user.vaiTro === 1 ? "Admin" : user.vaiTro === 2 ? "Nhân viên" : "Người dùng"}</span>
+                    <span>{new Date(user.ngayTao).toLocaleDateString()}</span>
+                  </div>
+                  <div>
+                    <span className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
+                      Ẩn
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center space-x-2 mt-6">
+              <Button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                variant="outline"
+                className="flex items-center"
+              >
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Trước
+              </Button>
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                <Button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  variant={currentPage === page ? "default" : "outline"}
+                  className={currentPage === page ? "bg-purple-400 text-white hover:bg-purple-300" : ""}
+                >
+                  {page}
+                </Button>
+              ))}
               <Button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
@@ -1435,10 +1719,10 @@ const AdminUsers = () => {
                   <div className="relative">
                     <Lock className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                      value={selectedUser.trangThai === 0 ? "Hoạt động" : "Khóa"}
+                      value={selectedUser.trangThai === 0 ? "Hoạt động" : selectedUser.trangThai === 1 ? "Khóa" : "Ẩn"}
                       disabled
                       className={`pl-8 font-semibold border-2 border-crocus-500 ${
-                        selectedUser.trangThai === 0 ? "text-green-600" : "text-red-600"
+                        selectedUser.trangThai === 0 ? "text-green-600" : selectedUser.trangThai === 1 ? "text-red-600" : "text-gray-600"
                       }`}
                     />
                   </div>
@@ -1845,23 +2129,24 @@ const AdminUsers = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+      <Dialog open={confirmationOpen} onOpenChange={setConfirmationOpen}>
         <DialogContent className="p-6">
-          <DialogTitle>Xác nhận xóa</DialogTitle>
-          <p className="mt-2">
-            Bạn có chắc chắn muốn xóa tài khoản <strong>{accountToDelete?.taiKhoan}</strong> không?
+          <DialogTitle>
+            {confirmationAction === "hide" && "Xác nhận xóa người dùng"}
+            {confirmationAction === "restore" && "Xác nhận khôi phục người dùng"}
+            {confirmationAction === "delete" && "Xác nhận xóa vĩnh viễn người dùng"}
+          </DialogTitle>
+          <p>
+            Bạn có chắc chắn muốn {confirmationAction === "hide" ? "xóa" : confirmationAction === "restore" ? "khôi phục" : "xóa vĩnh viễn"} người dùng {confirmationUser?.hoTen} không?
           </p>
           <div className="flex justify-end space-x-2 mt-4">
-            <Button type="button" onClick={() => setDeleteModalOpen(false)} disabled={isSubmitting}>
-              <X className="h-4 w-4 mr-2" /> Hủy
+            <Button onClick={() => setConfirmationOpen(false)} variant="outline">
+              <XCircle className="w-4 h-4 mr-2" />
+              Hủy
             </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={confirmDelete}
-              disabled={isSubmitting}
-            >
-              <Trash className="h-4 w-4 mr-2" /> {isSubmitting ? "Đang xóa..." : "Xóa"}
+            <Button onClick={performAction} variant="destructive">
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Xác nhận
             </Button>
           </div>
         </DialogContent>

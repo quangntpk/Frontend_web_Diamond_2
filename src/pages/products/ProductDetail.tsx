@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import Testing from "@/components/default/Testing";
 import {
   Card,
   CardContent,
@@ -361,7 +362,7 @@ const ProductDetail = () => {
           </div>
         </div>
       </div>
-
+      <Testing />
       {/* Product Tabs */}
       <div className="mb-12">
         <Tabs defaultValue="details">

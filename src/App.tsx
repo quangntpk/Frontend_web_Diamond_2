@@ -29,6 +29,7 @@ import Orders from "./pages/user/Orders";
 import ViewProfile from "./pages/user/ViewProfile";
 import Messages from "./pages/user/Messages";
 import StaffDashboard from "./pages/staff/StaffDashboard";
+import AdminBuy from "./pages/admin/AdminBuy";
 
 import StaffOrders from "./pages/admin/AdminOrders";
 import StaffInventory from "./pages/staff/StaffInventory";
@@ -54,6 +55,13 @@ import AdminLoaiSanPham from "./pages/admin/AdminLoaiSanPham";
 import VoucherUser from "./components/layout/voucher/VoucherUser";
 import PaymentSuccess from "./pages/user/PaymentSuccess";
 import PaymentFail from "./pages/user/PaymentFail";
+
+import HeroSection from "./components/default/HeroSection";
+import Newsletter from "./components/default/Newsletter";
+import Features from "./components/default/Features";
+import Testing from "./components/default/Testing";
+import DiaChi from "./components/default/DiaChi";
+
 const GoogleCallbackHandler = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -143,6 +151,12 @@ const App = () => (
               <Route path="user/profile/:userId" element={<ViewProfile />} />
               <Route path="/PaymentSuccess" element={<PaymentSuccess />} />
               <Route path="/PaymentFail" element={<PaymentFail />} />
+              <Route path="user/diachi" element={<DiaChi />} />
+              <Route path="hero" element={<HeroSection />} />
+              <Route path="newsletter" element={<Newsletter />} />
+              <Route path="features" element={<Features />} />
+              <Route path="testing" element={<Testing />} />
+
             </Route>
 
             <Route path="/staff" element={<AdminLayout role="staff" />}>
@@ -163,6 +177,7 @@ const App = () => (
               <Route path="users" element={<AdminUsers />} />
               <Route path="staff" element={<AdminStaff />} />
               <Route path="settings" element={<AdminSettings />} />
+              <Route path="buy" element={<AdminBuy />} />
 
               <Route path="orders" element={<StaffOrders />} />
 

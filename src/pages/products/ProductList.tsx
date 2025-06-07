@@ -41,7 +41,7 @@ const ProductListing = () => {
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, Infinity]);
   const [sortBy, setSortBy] = useState("name_asc");
   const [showFilters, setShowFilters] = useState(false);
 
@@ -52,37 +52,58 @@ const ProductListing = () => {
     const fetchProducts = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch("http://localhost:5261/api/SanPham/ListSanPham");
+        const response = await fetch("http://localhost:5261/api/SanPham/ListSanPham", {
+          headers: { Accept: "application/json" },
+        });
+
         if (!response.ok) {
-          throw new Error("Không thể tải danh sách sản phẩm");
+          throw new Error(`Lỗi ${response.status}: Không thể tải danh sách sản phẩm`);
         }
+
         const data = await response.json();
 
-        const mappedProducts = data.map((product: any) => ({
+        const mappedProducts: Product[] = data.map((product: {
+          id: string;
+          name: string;
+          moTa?: string;
+          hinh: string[];
+          donGia: number;
+          loaiSanPham?: string;
+          thuongHieu?: string;
+          chatLieu?: string;
+          kichThuoc: string[];
+          mauSac: string[];
+          hot?: boolean;
+        }) => ({
           id: product.id,
           name: product.name,
-          description: product.moTa || `Thương hiệu: ${product.thuongHieu} <br/> Chất liệu: ${product.chatLieu}`,
-          imageSrc: product.hinh[0] ? `data:image/jpeg;base64,${product.hinh[0]}` : "/placeholder-image.jpg",
+          description: product.moTa || `Thương hiệu: ${product.thuongHieu || "Không xác định"} <br/> Chất liệu: ${product.chatLieu || "Không xác định"}`,
+          imageSrc: product.hinh[0] ? `data:image/jpeg;base64,${product.hinh[0]}` : "https://via.placeholder.com/300",
           price: product.donGia,
           category: product.loaiSanPham || "Không xác định",
           thuongHieu: product.thuongHieu || "Không xác định",
           chatLieu: product.chatLieu || "Không xác định",
           kichThuoc: product.kichThuoc || [],
           mauSac: product.mauSac || [],
-          rating: 4 + Math.random() * 0.9, // Đánh giá ngẫu nhiên cho demo
+          rating: 4 + Math.random() * 0.9,
           isFavorite: false,
           hot: product.hot || false,
         }));
 
         setOriginalProducts(mappedProducts);
         setFilteredProducts(mappedProducts);
+        setPriceRange([
+          Math.floor(Math.min(...mappedProducts.map((p) => p.price))),
+          Math.ceil(Math.max(...mappedProducts.map((p) => p.price))),
+        ]);
         setError(null);
       } catch (err) {
-        console.error("Lỗi khi lấy sản phẩm:", err);
-        setError("Không thể tải sản phẩm. Vui lòng thử lại sau.");
+        const errorMessage = err instanceof Error ? err.message : "Lỗi không xác định";
+        console.error("Lỗi khi lấy sản phẩm:", errorMessage);
+        setError("Không thể tải sản phẩm. Vui lòng kiểm tra kết nối và thử lại.");
         toast({
           title: "Lỗi",
-          description: "Không thể tải sản phẩm",
+          description: errorMessage,
           variant: "destructive",
         });
       } finally {
@@ -99,6 +120,8 @@ const ProductListing = () => {
     const categoryParam = params.get("category");
     if (categoryParam && !selectedCategories.includes(categoryParam)) {
       setSelectedCategories([categoryParam]);
+    } else if (!categoryParam && selectedCategories.length > 0) {
+      setSelectedCategories([]);
     }
   }, [location.search]);
 
@@ -125,12 +148,12 @@ const ProductListing = () => {
 
   // Tính toán giá tối thiểu và tối đa
   const minPrice = useMemo(
-    () => Math.floor(Math.min(...originalProducts.map((p) => p.price))),
+    () => Math.floor(Math.min(...originalProducts.map((p) => p.price)) || 0),
     [originalProducts]
   );
 
   const maxPrice = useMemo(
-    () => Math.ceil(Math.max(...originalProducts.map((p) => p.price))),
+    () => Math.ceil(Math.max(...originalProducts.map((p) => p.price)) || Infinity),
     [originalProducts]
   );
 
@@ -140,7 +163,7 @@ const ProductListing = () => {
 
     // Lọc theo từ khóa tìm kiếm
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+      const query = searchQuery.toLowerCase().trim();
       result = result.filter(
         (product) =>
           product.name.toLowerCase().includes(query) ||
@@ -151,14 +174,14 @@ const ProductListing = () => {
     // Lọc theo màu sắc
     if (selectedColors.length > 0) {
       result = result.filter((product) =>
-        product.mauSac.some((color) => selectedColors.includes(color))
+        selectedColors.some((color) => product.mauSac.includes(color))
       );
     }
 
     // Lọc theo kích thước
     if (selectedSizes.length > 0) {
       result = result.filter((product) =>
-        product.kichThuoc.some((size) => selectedSizes.includes(size))
+        selectedSizes.some((size) => product.kichThuoc.includes(size))
       );
     }
 
@@ -173,34 +196,28 @@ const ProductListing = () => {
     }
 
     // Lọc theo khoảng giá
-    if (priceRange[0] > 0 || priceRange[1] > 0) {
-      result = result.filter(
-        (product) =>
-          (priceRange[0] === 0 || product.price >= priceRange[0]) &&
-          (priceRange[1] === 0 || product.price <= priceRange[1])
-      );
-    }
+    result = result.filter(
+      (product) =>
+        product.price >= priceRange[0] && product.price <= priceRange[1]
+    );
 
     // Sắp xếp sản phẩm
-    switch (sortBy) {
-      case "name_asc":
-        result.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case "name_desc":
-        result.sort((a, b) => b.name.localeCompare(a.name));
-        break;
-      case "price_asc":
-        result.sort((a, b) => a.price - b.price);
-        break;
-      case "price_desc":
-        result.sort((a, b) => b.price - a.price);
-        break;
-      case "rating_desc":
-        result.sort((a, b) => b.rating - a.rating);
-        break;
-      default:
-        break;
-    }
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case "name_asc":
+          return a.name.localeCompare(b.name);
+        case "name_desc":
+          return b.name.localeCompare(a.name);
+        case "price_asc":
+          return a.price - b.price;
+        case "price_desc":
+          return b.price - a.price;
+        case "rating_desc":
+          return b.rating - a.rating;
+        default:
+          return 0;
+      }
+    });
 
     setFilteredProducts(result);
   }, [
@@ -246,7 +263,7 @@ const ProductListing = () => {
     setSelectedSizes([]);
     setSelectedBrands([]);
     setSelectedCategories([]);
-    setPriceRange([0, 0]);
+    setPriceRange([minPrice, maxPrice]);
     setSortBy("name_asc");
     setShowFilters(false);
     toast({
@@ -275,12 +292,12 @@ const ProductListing = () => {
 
   // Xử lý yêu thích
   const toggleFavorite = (productId: string) => {
-    setFilteredProducts((prev) =>
+    setOriginalProducts((prev) =>
       prev.map((product) =>
         product.id === productId ? { ...product, isFavorite: !product.isFavorite } : product
       )
     );
-    setOriginalProducts((prev) =>
+    setFilteredProducts((prev) =>
       prev.map((product) =>
         product.id === productId ? { ...product, isFavorite: !product.isFavorite } : product
       )
@@ -325,9 +342,10 @@ const ProductListing = () => {
                   className="pl-8 w-full"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  aria-label="Tìm kiếm sản phẩm"
                 />
               </div>
-              <Button type="submit" size="sm" className="ml-2">
+              <Button type="submit" size="sm" className="ml-2" aria-label="Tìm kiếm">
                 Tìm kiếm
               </Button>
               <Button
@@ -336,6 +354,7 @@ const ProductListing = () => {
                 size="icon"
                 className="ml-2"
                 onClick={() => setShowFilters(!showFilters)}
+                aria-label="Mở bộ lọc"
               >
                 <SlidersHorizontal className="h-4 w-4" />
               </Button>
@@ -356,6 +375,7 @@ const ProductListing = () => {
                           id={`category-${category}`}
                           checked={selectedCategories.includes(category)}
                           onCheckedChange={() => handleCategoryChange(category)}
+                          aria-label={`Chọn danh mục ${category}`}
                         />
                         <label
                           htmlFor={`category-${category}`}
@@ -378,6 +398,7 @@ const ProductListing = () => {
                           id={`brand-${brand}`}
                           checked={selectedBrands.includes(brand)}
                           onCheckedChange={() => handleBrandChange(brand)}
+                          aria-label={`Chọn thương hiệu ${brand}`}
                         />
                         <label
                           htmlFor={`brand-${brand}`}
@@ -400,6 +421,7 @@ const ProductListing = () => {
                           id={`color-${color}`}
                           checked={selectedColors.includes(color)}
                           onCheckedChange={() => handleColorChange(color)}
+                          aria-label={`Chọn màu ${color}`}
                         />
                         <label
                           htmlFor={`color-${color}`}
@@ -422,6 +444,7 @@ const ProductListing = () => {
                           id={`size-${size}`}
                           checked={selectedSizes.includes(size)}
                           onCheckedChange={() => handleSizeChange(size)}
+                          aria-label={`Chọn kích thước ${size}`}
                         />
                         <label
                           htmlFor={`size-${size}`}
@@ -441,7 +464,7 @@ const ProductListing = () => {
                     onValueChange={(value) => {
                       switch (value) {
                         case "all":
-                          setPriceRange([0, 0]);
+                          setPriceRange([minPrice, maxPrice]);
                           break;
                         case "under-100000":
                           setPriceRange([0, 100000]);
@@ -458,7 +481,7 @@ const ProductListing = () => {
                       }
                     }}
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full" aria-label="Chọn khoảng giá">
                       <SelectValue placeholder="Chọn khoảng giá" />
                     </SelectTrigger>
                     <SelectContent>
@@ -474,7 +497,7 @@ const ProductListing = () => {
                 {/* Sắp xếp */}
                 <div>
                   <Label className="text-lg font-medium mb-3 block">Sắp Xếp Theo</Label>
-                  <Select value={sortBy} onValueChange={setSortBy}>
+                  <Select value={sortBy} onValueChange={setSortBy} aria-label="Chọn cách sắp xếp">
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Chọn cách sắp xếp" />
                     </SelectTrigger>
@@ -489,17 +512,19 @@ const ProductListing = () => {
                 </div>
               </div>
               <div className="mt-6 flex justify-end gap-4">
-                <Button variant="outline" onClick={clearFilters}>
+                <Button variant="outline" onClick={clearFilters} aria-label="Xóa bộ lọc">
                   Xóa Bộ Lọc
                 </Button>
-                <Button onClick={applyFilters}>Áp Dụng Bộ Lọc</Button>
+                <Button onClick={applyFilters} aria-label="Áp dụng bộ lọc">
+                  Áp Dụng Bộ Lọc
+                </Button>
               </div>
             </div>
           )}
 
           {/* Kết quả tìm kiếm */}
           {error ? (
-            <div className="py-12 text-center text-red-500">{error}</div>
+            <div className="py-12 text-center text-red-500" role="alert">{error}</div>
           ) : isLoading ? (
             <div className="py-12 text-center">
               <p>Đang tải sản phẩm...</p>
@@ -508,7 +533,9 @@ const ProductListing = () => {
             <div className="py-12 text-center">
               <h3 className="text-lg font-semibold mb-2">Không tìm thấy sản phẩm</h3>
               <p className="text-gray-600 mb-4">Hãy thử điều chỉnh tiêu chí tìm kiếm hoặc bộ lọc</p>
-              <Button onClick={clearFilters}>Xóa Tất Cả Bộ Lọc</Button>
+              <Button onClick={clearFilters} aria-label="Xóa tất cả bộ lọc">
+                Xóa Tất Cả Bộ Lọc
+              </Button>
             </div>
           ) : (
             <>
@@ -519,11 +546,12 @@ const ProductListing = () => {
                 {filteredProducts.map((product) => (
                   <Card key={product.id} className="overflow-hidden group">
                     <div className="relative aspect-square">
-                      <Link to={`/products/${product.id}`}>
+                      <Link to={`/products/${product.id}`} aria-label={`Xem chi tiết ${product.name}`}>
                         <img
                           src={product.imageSrc}
                           alt={product.name}
                           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          loading="lazy"
                         />
                       </Link>
                       {product.hot && (
@@ -534,6 +562,7 @@ const ProductListing = () => {
                       <button
                         onClick={() => toggleFavorite(product.id)}
                         className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 hover:bg-white transition-colors"
+                        aria-label={product.isFavorite ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
                       >
                         <Heart
                           className={`h-5 w-5 ${product.isFavorite ? "fill-red-500 text-red-500" : "text-gray-600"}`}
@@ -541,14 +570,14 @@ const ProductListing = () => {
                       </button>
                     </div>
                     <CardContent className="p-4">
-                      <Link to={`/product/${product.id}`}>
+                      <Link to={`/products/${product.id}`} aria-label={`Xem chi tiết ${product.name}`}>
                         <h3 className="font-medium hover:text-crocus-600 transition-colors">
                           {product.name}
                         </h3>
                       </Link>
                       <div className="flex justify-between items-center mt-2">
                         <p className="font-semibold">{formatter.format(product.price)}</p>
-                        <div className="flex space-x-1">
+                        <div className="flex space-x-1" aria-label={`Đánh giá ${product.rating} sao`}>
                           {[...Array(5)].map((_, i) => (
                             <svg
                               key={i}
@@ -594,7 +623,7 @@ const ProductListing = () => {
                           size="sm"
                           className="flex-1"
                         >
-                          <Link to={`/products/${product.id}`}>
+                          <Link to={`/products/${product.id}`} aria-label={`Xem chi tiết ${product.name}`}>
                             Chi tiết
                           </Link>
                         </Button>
@@ -602,6 +631,7 @@ const ProductListing = () => {
                           size="sm"
                           className="flex-1 bg-crocus-500 hover:bg-crocus-600"
                           onClick={() => handleBuyNow(product)}
+                          aria-label={`Mua ngay ${product.name}`}
                         >
                           <ShoppingCart className="h-4 w-4 mr-2" />
                           Mua ngay
