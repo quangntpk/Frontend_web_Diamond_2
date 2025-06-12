@@ -190,7 +190,9 @@ const AdminContact = () => {
         title: "Lỗi",
         text: "Lỗi khi tải danh sách liên hệ: " + err.message,
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     } finally {
       setLoading(false);
@@ -241,7 +243,9 @@ const AdminContact = () => {
         title: "Lỗi",
         text: "Lỗi khi tải dữ liệu thống kê: " + err.message,
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     } finally {
       setLoading(false);
@@ -308,7 +312,9 @@ const AdminContact = () => {
         title: "Thành công",
         text: "Cập nhật trạng thái thành công!",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     } catch (err) {
       setError(err.message);
@@ -317,7 +323,9 @@ const AdminContact = () => {
         title: "Lỗi",
         text: "Lỗi khi cập nhật trạng thái: " + err.message,
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     } finally {
       setStatusLoading((prev) => ({ ...prev, [contact.maLienHe]: false }));
@@ -349,7 +357,9 @@ const AdminContact = () => {
         title: "Lỗi",
         text: "Vui lòng chọn ít nhất một liên hệ để xóa.",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
       setDeleteContact(null);
       return;
@@ -377,7 +387,9 @@ const AdminContact = () => {
         title: "Thành công",
         text: "Xóa liên hệ thành công!",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     } catch (err) {
       setError(err.message);
@@ -386,7 +398,9 @@ const AdminContact = () => {
         title: "Lỗi",
         text: "Lỗi khi xóa liên hệ: " + err.message,
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     }
   };
@@ -439,7 +453,9 @@ const AdminContact = () => {
         title: "Thành công",
         text: "Gửi hỗ trợ thành công!",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
       closeSupportModal();
     } catch (err) {
@@ -449,7 +465,9 @@ const AdminContact = () => {
         title: "Lỗi",
         text: "Lỗi khi gửi email hỗ trợ: " + err.message,
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     } finally {
       setIsSending(false);

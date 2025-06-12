@@ -39,9 +39,8 @@ import {
 import { Search, MoreVertical, Upload, X, Plus, EyeOff, Loader2, ChevronLeft, ChevronRight, Settings2 } from "lucide-react";
 import Swal from "sweetalert2";
 
-// Interface cho dữ liệu LoaiSanPham từ backend
 interface LoaiSanPham {
-  maLoaiSanPham: number; // Thay đổi từ string sang number
+  maLoaiSanPham: number;
   tenLoaiSanPham: string;
   kiHieu: string;
   kichThuoc?: string;
@@ -49,7 +48,6 @@ interface LoaiSanPham {
   trangThai?: number;
 }
 
-// Interface cho dữ liệu LoaiSanPham được nhóm lại
 interface GroupedLoaiSanPham {
   tenLoaiSanPham: string;
   kiHieu: string;
@@ -162,6 +160,10 @@ const AdminType = () => {
         icon: "error",
         title: "Lỗi",
         text: "Lỗi khi tải danh sách loại sản phẩm: " + (error as Error).message,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true,
       });
     } finally {
       setLoading(false);
@@ -200,6 +202,10 @@ const AdminType = () => {
         icon: "error",
         title: "Lỗi",
         text: "Kích thước hình ảnh không được vượt quá 2MB!",
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true,
       });
       return;
     }
@@ -220,6 +226,10 @@ const AdminType = () => {
         icon: "error",
         title: "Lỗi",
         text: "Không thể đọc tệp hình ảnh!",
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true,
       });
     };
     reader.readAsDataURL(file);
@@ -246,6 +256,10 @@ const AdminType = () => {
         icon: "error",
         title: "Lỗi",
         text: "Vui lòng chọn một tệp hình ảnh!",
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true,
       });
     }
   };
@@ -259,6 +273,10 @@ const AdminType = () => {
         icon: "error",
         title: "Lỗi",
         text: "Vui lòng chọn một tệp hình ảnh!",
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true,
       });
     }
   };
@@ -419,7 +437,9 @@ const AdminType = () => {
         title: "Thành công",
         text: "Thêm loại sản phẩm thành công!",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     } catch (error) {
       setError((error as Error).message);
@@ -427,6 +447,10 @@ const AdminType = () => {
         icon: "error",
         title: "Lỗi",
         text: "Lỗi khi thêm loại sản phẩm: " + (error as Error).message,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true,
       });
     } finally {
       setIsProcessing(false);
@@ -509,7 +533,9 @@ const AdminType = () => {
         title: "Thành công",
         text: "Cập nhật loại sản phẩm thành công!",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     } catch (error) {
       setError((error as Error).message);
@@ -517,6 +543,10 @@ const AdminType = () => {
         icon: "error",
         title: "Lỗi",
         text: "Lỗi khi cập nhật loại sản phẩm: " + (error as Error).message,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true,
       });
     } finally {
       setIsProcessing(false);
@@ -559,7 +589,9 @@ const AdminType = () => {
         title: "Thành công",
         text: `Đã xóa kích thước ${entry.kichThuoc}!`,
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     } catch (error) {
       setError((error as Error).message);
@@ -567,6 +599,10 @@ const AdminType = () => {
         icon: "error",
         title: "Lỗi",
         text: "Lỗi khi xóa kích thước: " + (error as Error).message,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true,
       });
     } finally {
       setIsProcessing(false);
@@ -615,7 +651,9 @@ const AdminType = () => {
         title: "Thành công",
         text: "Đã xóa loại sản phẩm!",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     } catch (error) {
       setError((error as Error).message);
@@ -623,6 +661,10 @@ const AdminType = () => {
         icon: "error",
         title: "Lỗi",
         text: "Lỗi khi xóa loại sản phẩm: " + (error as Error).message,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true,
       });
     } finally {
       setIsProcessing(false);
@@ -668,7 +710,9 @@ const AdminType = () => {
         title: "Thành công",
         text: `Đã khôi phục kích thước ${kichThuocCanKhoiPhuc.kichThuoc}!`,
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     } catch (error) {
       setError((error as Error).message);
@@ -676,6 +720,10 @@ const AdminType = () => {
         icon: "error",
         title: "Lỗi",
         text: "Lỗi khi khôi phục kích thước: " + (error as Error).message,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true,
       });
     } finally {
       setIsProcessing(false);
@@ -724,7 +772,9 @@ const AdminType = () => {
         title: "Thành công",
         text: "Đã khôi phục loại sản phẩm!",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     } catch (error) {
       setError((error as Error).message);
@@ -732,6 +782,10 @@ const AdminType = () => {
         icon: "error",
         title: "Lỗi",
         text: "Lỗi khi khôi phục loại sản phẩm: " + (error as Error).message,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true,
       });
     } finally {
       setIsProcessing(false);
@@ -766,7 +820,9 @@ const AdminType = () => {
         title: "Thành công",
         text: `Đã xóa vĩnh viễn kích thước ${kichThuocCanXoaVinhVien.kichThuoc}!`,
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     } catch (error) {
       setError((error as Error).message);
@@ -774,6 +830,10 @@ const AdminType = () => {
         icon: "error",
         title: "Lỗi",
         text: "Lỗi khi xóa vĩnh viễn kích thước: " + (error as Error).message,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true,
       });
     } finally {
       setIsProcessing(false);
@@ -812,7 +872,9 @@ const AdminType = () => {
         title: "Thành công",
         text: "Đã xóa vĩnh viễn loại sản phẩm!",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     } catch (error) {
       setError((error as Error).message);
@@ -820,6 +882,10 @@ const AdminType = () => {
         icon: "error",
         title: "Lỗi",
         text: "Lỗi khi xóa vĩnh viễn loại sản phẩm: " + (error as Error).message,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true,
       });
     } finally {
       setIsProcessing(false);
@@ -1213,9 +1279,8 @@ const AdminType = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Hình Ảnh</label>
                 <div
-                  className={`border-2 border-dashed rounded-lg p-4 text-center ${
-                    isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"
-                  }`}
+                  className={`border-2 border-dashed rounded-lg p-4 text-center ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"
+                    }`}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
@@ -1340,7 +1405,7 @@ const AdminType = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Kí hiệu</label>
                 <Input
                   value={loaiSanPhamDangSua?.kiHieu || ""}
-                  onChange={() => {}} // Disabled, so no-op
+                  onChange={() => { }} // Disabled, so no-op
                   placeholder="Ký hiệu"
                   maxLength={1}
                   disabled={true}
@@ -1355,7 +1420,7 @@ const AdminType = () => {
                       <div key={index} className="flex items-center gap-2 mb-2">
                         <Input
                           value={entry.kichThuoc || ""}
-                          onChange={() => {}} // Disabled, so no-op
+                          onChange={() => { }} // Disabled, so no-op
                           placeholder="Kích thước"
                           maxLength={3}
                           disabled={true}
@@ -1382,9 +1447,8 @@ const AdminType = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Hình Ảnh</label>
                 <div
-                  className={`border-2 border-dashed rounded-lg p-2 text-center ${
-                    isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"
-                  }`}
+                  className={`border-2 border-dashed rounded-lg p-2 text-center ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"
+                    }`}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}

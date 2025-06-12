@@ -1,26 +1,21 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Testing from "@/components/default/Testing";
+import SelectSize from "@/components/default/SelectSize";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardFooter,
 } from "@/components/ui/card";
 import { Heart, ShoppingCart } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
-// Interface for product details
 interface ProductDetail {
   kichThuoc: string;
   soLuong: number;
   gia: number;
 }
 
-// Interface for product data based on API response
 interface Product {
   id: string;
   tenSanPham: string;
@@ -33,7 +28,6 @@ interface Product {
   hinhAnhs: string[];
 }
 
-// Mock data for reviews and related products
 const mockReviews = [
   { id: 1, user: "Emma S.", date: "March 15, 2025", rating: 5, comment: "Absolutely love this product! The quality is amazing." },
   { id: 2, user: "Sophia T.", date: "March 10, 2025", rating: 4, comment: "Great fit, very comfortable." },
@@ -67,13 +61,8 @@ const mockRelatedProducts = [
   },
 ];
 
-// Placeholder for showNotification (replace with your actual implementation)
 const showNotification = (message: string, type: "success" | "error") => {
   alert(`${type.toUpperCase()}: ${message}`);
-  // Example with react-toastify:
-  // import { toast } from 'react-toastify';
-  // if (type === "success") toast.success(message);
-  // else toast.error(message);
 };
 
 const ProductDetail = () => {
@@ -93,7 +82,6 @@ const ProductDetail = () => {
       try {
         setLoading(true);
         const baseId = id?.split('_')[0] || id;
-        console.log(`Fetching products for base ID: ${baseId}`);
         const response = await fetch(
           `http://localhost:5261/api/SanPham/SanPhamByIDSorted?id=${baseId}`,
           {
@@ -109,7 +97,6 @@ const ProductDetail = () => {
         }
 
         const data: Product[] = await response.json();
-        console.log("API response data:", data);
 
         if (!data || data.length === 0) {
           throw new Error("No products returned from API.");
@@ -117,10 +104,8 @@ const ProductDetail = () => {
 
         setProducts(data);
 
-        // Select the product matching the full id (including color) or fall back to the first product
         const product = data.find((p) => p.id === id) || data[0];
         if (product) {
-          console.log("Selected product:", product);
           setSelectedProduct(product);
           setSelectedColor(product.mauSac);
           setSelectedSize(product.details[0]?.kichThuoc || "");
@@ -128,12 +113,10 @@ const ProductDetail = () => {
           setStock(product.details[0]?.soLuong || 0);
         } else {
           setError(`Product with ID ${id} not found in API response.`);
-          console.error(`Product with ID ${id} not found. Available IDs:`, data.map(p => p.id));
         }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Unknown error occurred.";
         setError(`Failed to fetch product details: ${errorMessage}`);
-        console.error("Fetch error:", err);
       } finally {
         setLoading(false);
       }
@@ -145,7 +128,6 @@ const ProductDetail = () => {
   const handleColorChange = (color: string) => {
     const product = products.find((p) => p.mauSac === color);
     if (product) {
-      console.log("Changed to product:", product);
       setSelectedProduct(product);
       setSelectedColor(color);
       setSelectedSize(product.details[0]?.kichThuoc || "");
@@ -159,12 +141,9 @@ const ProductDetail = () => {
     setSelectedSize(size);
     const detail = selectedProduct?.details.find((d) => d.kichThuoc === size);
     setStock(detail?.soLuong || 0);
-    console.log(`Selected size: ${size}, Stock: ${detail?.soLuong || 0}`);
   };
 
-  const toggleFavorite = () => {
-    console.log(`Toggle favorite for product ${id}`);
-  };
+  const toggleFavorite = () => {};
 
   const handleAddToCart = async () => {
     if (!selectedSize) {
@@ -172,7 +151,7 @@ const ProductDetail = () => {
       return;
     }
     const cartData = {
-      IDNguoiDung: "KH001", // Replace with dynamic user ID if available
+      IDNguoiDung: "KH001",
       IDSanPham: id?.split("_")[0] || id,
       MauSac: selectedProduct?.mauSac,
       KichThuoc: selectedSize,
@@ -202,94 +181,74 @@ const ProductDetail = () => {
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-4">
-        <Link
-          to="/products"
-          className="text-crocus-600 hover:underline flex items-center gap-1"
-        >
-          ← Quay lại trang Danh Sách Sản Phẩm
-        </Link>
-      </div>
-
-      {/* Product Details */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-        {/* Product Images */}
-        <div className="space-y-4">
-          <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
+    <div className="container mx-auto py-8 px-4 max-w-7xl">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
+        <div className="space-y-3">
+          <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 shadow-sm border border-[#9b87f5]/30">
             <img
               src={mainImage}
               alt={selectedProduct.tenSanPham}
               className="w-full h-full object-cover"
-              onError={() => console.error("Failed to load main image:", mainImage)}
             />
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-2">
             {selectedProduct.hinhAnhs.map((image, idx) => (
               <button
                 key={idx}
                 onClick={() => setMainImage(`data:image/jpeg;base64,${image}`)}
-                className={`aspect-square rounded-md overflow-hidden ${
-                  mainImage === `data:image/jpeg;base64,${image}` ? "ring-2 ring-crocus-500" : "opacity-70"
+                className={`aspect-square rounded-md overflow-hidden border border-[#9b87f5]/30 ${
+                  mainImage === `data:image/jpeg;base64,${image}` ? "ring-2 ring-[#9b87f5]" : "opacity-80 hover:opacity-100"
                 }`}
               >
                 <img
                   src={`data:image/jpeg;base64,${image}`}
                   alt={`${selectedProduct.tenSanPham} view ${idx + 1}`}
                   className="w-full h-full object-cover"
-                  onError={() => console.error("Failed to load thumbnail image:", image)}
                 />
               </button>
             ))}
           </div>
         </div>
 
-        {/* Product Info */}
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold">{selectedProduct.tenSanPham}</h1>
-            <div className="flex items-center gap-2 mt-2">
-              <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <svg
-                    key={i}
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill={i < Math.floor(4.5) ? "currentColor" : "none"}
-                    stroke={i < Math.floor(4.5) ? "none" : "currentColor"}
-                    className={`w-5 h-5 ${
-                      i < Math.floor(4.5) ? "text-yellow-400" : "text-gray-300"
-                    }`}
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                ))}
-              </div>
-              <span className="text-gray-600">4.5 ({mockReviews.length} reviews)</span>
+        <div className="border border-[#9b87f5]/30 rounded-lg p-4 shadow-sm bg-white">
+          <h1 className="text-xl font-bold text-gray-900 mb-2">{selectedProduct.tenSanPham}</h1>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex">
+              {[...Array(5)].map((_, i) => (
+                <svg
+                  key={i}
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill={i < Math.floor(4.5) ? "currentColor" : "none"}
+                  stroke={i < Math.floor(4.5) ? "none" : "currentColor"}
+                  className={`w-3 h-3 ${i < Math.floor(4.5) ? "text-yellow-400" : "text-gray-300"}`}
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              ))}
             </div>
-            <p className="text-2xl font-bold text-crocus-600 mt-2">
-              {(selectedProduct.details[0].gia/1000).toFixed(3)} VND
-            </p>
+            <span className="text-xs text-gray-600">4.5 ({mockReviews.length} đánh giá)</span>
           </div>
+          <p className="text-lg font-semibold text-[#9b87f5] mb-3">
+            {(selectedProduct.details[0].gia/1000).toFixed(3)} VND
+          </p>
+          <p className="text-sm text-gray-600 mb-3">{selectedProduct.moTa || "Sản phẩm này chưa có mô tả"}</p>
 
-          <p className="text-gray-700">{selectedProduct.moTa || "Sản phẩm này chưa có mô tả"}</p>
-
-          {/* Color Selection */}
-          <div>
-            <h3 className="font-medium mb-2">Color</h3>
-            <div className="flex gap-3">
+          <div className="mb-3">
+            <h3 className="font-medium text-sm text-gray-900 mb-1">Màu sắc</h3>
+            <div className="flex gap-1.5">
               {products.map((product) => (
                 <button
                   key={product.mauSac}
                   onClick={() => handleColorChange(product.mauSac)}
-                  className={`w-10 h-10 rounded-full border ${
+                  className={`w-7 h-7 rounded-full border ${
                     selectedColor === product.mauSac
-                      ? "border-crocus-500 ring-2 ring-crocus-500"
-                      : "border-gray-200 hover:border-gray-300"
+                      ? "border-[#9b87f5] ring-2 ring-[#9b87f5]"
+                      : "border-gray-200 hover:border-[#9b87f5]/50"
                   }`}
                   style={{ backgroundColor: `#${product.mauSac}` }}
                   title={product.mauSac}
@@ -298,18 +257,20 @@ const ProductDetail = () => {
             </div>
           </div>
 
-          {/* Size Selection */}
-          <div>
-            <h3 className="font-medium mb-2">Size</h3>
-            <div className="flex flex-wrap gap-3">
+          <div className="mb-3">
+            <div className="flex justify-between items-center mb-1">
+              <h3 className="font-medium text-sm text-gray-900">Kích thước</h3>
+              <SelectSize />
+            </div>
+            <div className="flex flex-wrap gap-1.5">
               {selectedProduct.details.map((detail) => (
                 <button
                   key={detail.kichThuoc}
                   onClick={() => handleSizeChange(detail.kichThuoc)}
-                  className={`w-10 h-10 flex items-center justify-center rounded-md border ${
+                  className={`w-9 h-9 flex items-center justify-center rounded-md border text-xs ${
                     selectedSize === detail.kichThuoc
-                      ? "border-crocus-500 bg-crocus-50 text-crocus-700"
-                      : "border-gray-200 hover:border-gray-300"
+                      ? "border-[#9b87f5] bg-[#9b87f5]/10 text-[#9b87f5]"
+                      : "border-gray-200 hover:border-[#9b87f5]/50"
                   }`}
                 >
                   {detail.kichThuoc}
@@ -318,28 +279,26 @@ const ProductDetail = () => {
             </div>
           </div>
 
-          {/* Stock Information */}
-          <div>
-            <p className="text-gray-700">
-              Trong kho còn lại : <span className="font-medium">{stock} sản phẩm</span>
+          <div className="mb-3">
+            <p className="text-sm text-gray-600">
+              Trong kho: <span className="font-medium">{stock} sản phẩm</span>
             </p>
           </div>
 
-          {/* Quantity */}
-          <div>
-            <h3 className="font-medium mb-2">Só Lượng</h3>
-            <div className="flex items-center border border-gray-200 rounded-md w-32">
+          <div className="mb-3">
+            <h3 className="font-medium text-sm text-gray-900 mb-1">Số lượng</h3>
+            <div className="flex items-center border border-gray-200 rounded-md w-24">
               <button
                 onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                className="px-3 py-2 text-gray-500 hover:text-gray-700"
+                className="px-1.5 py-1 text-gray-500 hover:text-[#9b87f5]"
                 disabled={quantity <= 1}
               >
                 -
               </button>
-              <span className="flex-1 text-center">{quantity}</span>
+              <span className="flex-1 text-center text-xs">{quantity}</span>
               <button
                 onClick={() => setQuantity((prev) => Math.min(stock, prev + 1))}
-                className="px-3 py-2 text-gray-500 hover:text-gray-700"
+                className="px-1.5 py-1 text-gray-500 hover:text-[#9b87f5]"
                 disabled={quantity >= stock}
               >
                 +
@@ -347,50 +306,58 @@ const ProductDetail = () => {
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <Button
               onClick={handleAddToCart}
-              className="flex-1 bg-crocus-600 hover:bg-crocus-700"
+              className="flex-1 bg-[#9b87f5] hover:bg-[#8a76e0] text-white text-sm py-2"
               disabled={stock === 0}
             >
-              <ShoppingCart className="mr-2 h-4 w-4" /> Thêm Vào Giỏ Hàng
+              <ShoppingCart className="mr-1 h-3 w-3" /> Thêm vào giỏ
             </Button>
-            <Button variant="outline" onClick={toggleFavorite} className="w-12">
-              <Heart className="h-5 w-5" />
+            <Button
+              variant="outline"
+              onClick={toggleFavorite}
+              className="w-9 border-[#9b87f5] text-[#9b87f5] hover:bg-[#9b87f5]/10"
+            >
+              <Heart className="h-3 w-3" />
             </Button>
           </div>
         </div>
       </div>
       <Testing />
-      {/* Product Tabs */}
       <div className="mb-12">
         <Tabs defaultValue="details">
-          <TabsList className="mb-4">
-            <TabsTrigger value="details">Chi Tiết Sản Phẩm</TabsTrigger>
-            <TabsTrigger value="specifications">Tóm Tắt</TabsTrigger>
-            <TabsTrigger value="reviews">Đánh Giá</TabsTrigger>
+          <TabsList className="mb-4 bg-transparent border-b border-[#9b87f5]/20">
+            <TabsTrigger value="details" className="data-[state=active]:text-[#9b87f5] data-[state=active]:border-b-2 data-[state=active]:border-[#333333]">
+              Chi tiết thông tin
+            </TabsTrigger>
+            <TabsTrigger value="specifications" className="data-[state=active]:text-[#9b87f5] data-[state=active]:border-b-2 data-[state=active]:border-[#333333]">
+              Thông tin
+            </TabsTrigger>
+            <TabsTrigger value="reviews" className="data-[state=active]:text-[#9b87f5] data-[state=active]:border-b-2 data-[state=active]:border-[#333333]">
+              Đánh giá
+            </TabsTrigger>
           </TabsList>
-          <TabsContent value="details" className="p-4 border rounded-lg">
-            <p className="text-gray-700">{selectedProduct.moTa || "Sản Phẩm Này Chưa Có Mô Tả"}</p>
+          <TabsContent value="details" className="p-3 border border-[#9b87f5]/20 rounded-lg">
+            <p className="text-sm text-gray-600">{selectedProduct.moTa || "Sản phẩm này chưa có mô tả"}</p>
           </TabsContent>
-          <TabsContent value="specifications" className="p-4 border rounded-lg">
-            <ul className="list-disc pl-5 space-y-2">
-              <li className="text-gray-700">Sizes: {selectedProduct.details.map((d) => d.kichThuoc).join(", ")}</li>
-              <li className="text-gray-700">Số Lượng còn lại: {stock} units</li>
-              <li className="text-gray-700">Chất Liệu: {selectedProduct.chatLieu}</li>
-              <li className="text-gray-700">Thương Hiệu: {selectedProduct.maThuongHieu}</li>
+          <TabsContent value="specifications" className="p-3 border border-[#9b87f5]/20 rounded-lg">
+            <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600">
+              <li>Kích thước: {selectedProduct.details.map((d) => d.kichThuoc).join(", ")}</li>
+              <li>Số lượng: {stock} sản phẩm</li>
+              <li>Chất liệu: {selectedProduct.chatLieu}</li>
+              <li>Thương hiệu: {selectedProduct.maThuongHieu}</li>
             </ul>
           </TabsContent>
-          <TabsContent value="reviews" className="p-4 border rounded-lg">
-            <div className="space-y-4">
+          <TabsContent value="reviews" className="p-3 border border-[#9b87f5]/20 rounded-lg">
+            <div className="space-y-3">
               {mockReviews.map((review) => (
-                <div key={review.id} className="border-b pb-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-medium">{review.user}</span>
-                    <span className="text-sm text-gray-500">{review.date}</span>
+                <div key={review.id} className="border-b border-[#9b87f5]/10 pb-3">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-medium text-sm text-gray-900">{review.user}</span>
+                    <span className="text-xs text-gray-500">{review.date}</span>
                   </div>
-                  <div className="flex mb-2">
+                  <div className="flex mb-1">
                     {[...Array(5)].map((_, i) => (
                       <svg
                         key={i}
@@ -398,9 +365,7 @@ const ProductDetail = () => {
                         viewBox="0 0 24 24"
                         fill={i < review.rating ? "currentColor" : "none"}
                         stroke={i < review.rating ? "none" : "currentColor"}
-                        className={`w-4 h-4 ${
-                          i < review.rating ? "text-yellow-400" : "text-gray-300"
-                        }`}
+                        className={`w-3 h-3 ${i < review.rating ? "text-yellow-400" : "text-gray-300"}`}
                       >
                         <path
                           fillRule="evenodd"
@@ -410,7 +375,7 @@ const ProductDetail = () => {
                       </svg>
                     ))}
                   </div>
-                  <p className="text-gray-700">{review.comment}</p>
+                  <p className="text-sm text-gray-600">{review.comment}</p>
                 </div>
               ))}
             </div>
@@ -418,40 +383,33 @@ const ProductDetail = () => {
         </Tabs>
       </div>
 
-      {/* Related Products */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Bạn có thể sẽ thích</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div>
+        <h2 className="text-lg font-bold text-gray-900 mb-4">Sản phẩm liên quan</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {mockRelatedProducts.map((product) => (
-            <Card key={product.id} className="overflow-hidden">
-              <div className="relative aspect-square">
-                <Link to={`/products/${product.id}`}>
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="h-full w-full object-cover"
-                  />
-                </Link>
+            <Card key={product.id} className="overflow-hidden border-[#9b87f5]/20">
+              <div className="relative aspect-square border border-[#9b87f5]/30">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="h-full w-full object-cover"
+                />
                 <button
-                  onClick={() => console.log(`Toggle favorite for related product ${product.id}`)}
-                  className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 hover:bg-white transition-colors"
+                  onClick={() => {}}
+                  className="absolute top-2 right-2 p-1 rounded-full bg-white/80 hover:bg-white"
                 >
                   <Heart
-                    className={`h-5 w-5 ${
-                      product.isFavorite ? "fill-red-500 text-red-500" : "text-gray-600"
-                    }`}
+                    className={`h-3 w-3 ${product.isFavorite ? "fill-[#9b87f5] text-[#9b87f5]" : "text-gray-600"}`}
                   />
                 </button>
               </div>
-              <CardContent className="p-4">
-                <Link to={`/products/${product.id}`}>
-                  <h3 className="font-medium hover:text-crocus-600 transition-colors">
-                    {product.name}
-                  </h3>
-                </Link>
-                <div className="flex justify-between items-center mt-2">
-                  <p className="font-semibold">${product.price.toFixed(2)}</p>
-                  <div className="flex space-x-1">
+              <CardContent className="p-2">
+                <h3 className="font-medium text-xs text-gray-900 hover:text-[#9b87f5] transition-colors">
+                  {product.name}
+                </h3>
+                <div className="flex justify-between items-center mt-1">
+                  <p className="font-semibold text-[#9b87f5] text-xs">${product.price.toFixed(2)}</p>
+                  <div className="flex space-x-0.5">
                     {[...Array(5)].map((_, i) => (
                       <svg
                         key={i}
@@ -459,9 +417,7 @@ const ProductDetail = () => {
                         viewBox="0 0 24 24"
                         fill={i < Math.floor(product.rating) ? "currentColor" : "none"}
                         stroke={i < Math.floor(product.rating) ? "none" : "currentColor"}
-                        className={`w-4 h-4 ${
-                          i < Math.floor(product.rating) ? "text-yellow-400" : "text-gray-300"
-                        }`}
+                        className={`w-2.5 h-2.5 ${i < Math.floor(product.rating) ? "text-yellow-400" : "text-gray-300"}`}
                       >
                         <path
                           fillRule="evenodd"

@@ -1,14 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Heart, ShoppingCart, Search, SlidersHorizontal } from "lucide-react";
+import { Heart, ShoppingCart, SlidersHorizontal, Search, DollarSign, SortAsc, Flame } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 interface Product {
   id: string;
@@ -44,10 +43,10 @@ const ProductListing = () => {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, Infinity]);
   const [sortBy, setSortBy] = useState("name_asc");
   const [showFilters, setShowFilters] = useState(false);
+  const [displayCount, setDisplayCount] = useState(16);
 
   const location = useLocation();
 
-  // Lấy danh sách sản phẩm từ API
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -55,25 +54,12 @@ const ProductListing = () => {
         const response = await fetch("http://localhost:5261/api/SanPham/ListSanPham", {
           headers: { Accept: "application/json" },
         });
-
-        if (!response.ok) {
-          throw new Error(`Lỗi ${response.status}: Không thể tải danh sách sản phẩm`);
-        }
-
+        if (!response.ok) throw new Error(`Lỗi ${response.status}`);
         const data = await response.json();
-
         const mappedProducts: Product[] = data.map((product: {
-          id: string;
-          name: string;
-          moTa?: string;
-          hinh: string[];
-          donGia: number;
-          loaiSanPham?: string;
-          thuongHieu?: string;
-          chatLieu?: string;
-          kichThuoc: string[];
-          mauSac: string[];
-          hot?: boolean;
+          id: string; name: string; moTa?: string; hinh: string[]; donGia: number;
+          loaiSanPham?: string; thuongHieu?: string; chatLieu?: string; kichThuoc: string[];
+          mauSac: string[]; hot?: boolean;
         }) => ({
           id: product.id,
           name: product.name,
@@ -89,7 +75,6 @@ const ProductListing = () => {
           isFavorite: false,
           hot: product.hot || false,
         }));
-
         setOriginalProducts(mappedProducts);
         setFilteredProducts(mappedProducts);
         setPriceRange([
@@ -99,22 +84,14 @@ const ProductListing = () => {
         setError(null);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Lỗi không xác định";
-        console.error("Lỗi khi lấy sản phẩm:", errorMessage);
-        setError("Không thể tải sản phẩm. Vui lòng kiểm tra kết nối và thử lại.");
-        toast({
-          title: "Lỗi",
-          description: errorMessage,
-          variant: "destructive",
-        });
+        setError("Không thể tải sản phẩm.");
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchProducts();
   }, []);
 
-  // Xử lý tham số danh mục từ URL
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const categoryParam = params.get("category");
@@ -125,7 +102,6 @@ const ProductListing = () => {
     }
   }, [location.search]);
 
-  // Lấy danh sách màu sắc, kích thước, thương hiệu, danh mục duy nhất
   const uniqueColors = useMemo(
     () => [...new Set(originalProducts.flatMap((product) => product.mauSac))].sort(),
     [originalProducts]
@@ -146,7 +122,6 @@ const ProductListing = () => {
     [originalProducts]
   );
 
-  // Tính toán giá tối thiểu và tối đa
   const minPrice = useMemo(
     () => Math.floor(Math.min(...originalProducts.map((p) => p.price)) || 0),
     [originalProducts]
@@ -157,11 +132,8 @@ const ProductListing = () => {
     [originalProducts]
   );
 
-  // Lọc và sắp xếp sản phẩm
   useEffect(() => {
     let result = [...originalProducts];
-
-    // Lọc theo từ khóa tìm kiếm
     if (searchQuery) {
       const query = searchQuery.toLowerCase().trim();
       result = result.filter(
@@ -170,68 +142,38 @@ const ProductListing = () => {
           product.description.toLowerCase().includes(query)
       );
     }
-
-    // Lọc theo màu sắc
     if (selectedColors.length > 0) {
       result = result.filter((product) =>
         selectedColors.some((color) => product.mauSac.includes(color))
       );
     }
-
-    // Lọc theo kích thước
     if (selectedSizes.length > 0) {
       result = result.filter((product) =>
         selectedSizes.some((size) => product.kichThuoc.includes(size))
       );
     }
-
-    // Lọc theo thương hiệu
     if (selectedBrands.length > 0) {
       result = result.filter((product) => selectedBrands.includes(product.thuongHieu));
     }
-
-    // Lọc theo danh mục
     if (selectedCategories.length > 0) {
       result = result.filter((product) => selectedCategories.includes(product.category));
     }
-
-    // Lọc theo khoảng giá
     result = result.filter(
-      (product) =>
-        product.price >= priceRange[0] && product.price <= priceRange[1]
+      (product) => product.price >= priceRange[0] && product.price <= priceRange[1]
     );
-
-    // Sắp xếp sản phẩm
     result.sort((a, b) => {
       switch (sortBy) {
-        case "name_asc":
-          return a.name.localeCompare(b.name);
-        case "name_desc":
-          return b.name.localeCompare(a.name);
-        case "price_asc":
-          return a.price - b.price;
-        case "price_desc":
-          return b.price - a.price;
-        case "rating_desc":
-          return b.rating - a.rating;
-        default:
-          return 0;
+        case "name_asc": return a.name.localeCompare(b.name);
+        case "name_desc": return b.name.localeCompare(a.name);
+        case "price_asc": return a.price - b.price;
+        case "price_desc": return b.price - a.price;
+        case "rating_desc": return b.rating - a.rating;
+        default: return 0;
       }
     });
-
     setFilteredProducts(result);
-  }, [
-    originalProducts,
-    searchQuery,
-    selectedColors,
-    selectedSizes,
-    selectedBrands,
-    selectedCategories,
-    priceRange,
-    sortBy,
-  ]);
+  }, [originalProducts, searchQuery, selectedColors, selectedSizes, selectedBrands, selectedCategories, priceRange, sortBy]);
 
-  // Xử lý thay đổi bộ lọc
   const handleColorChange = (color: string) => {
     setSelectedColors((prev) =>
       prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color]
@@ -256,7 +198,6 @@ const ProductListing = () => {
     );
   };
 
-  // Xóa bộ lọc
   const clearFilters = () => {
     setSearchQuery("");
     setSelectedColors([]);
@@ -265,32 +206,8 @@ const ProductListing = () => {
     setSelectedCategories([]);
     setPriceRange([minPrice, maxPrice]);
     setSortBy("name_asc");
-    setShowFilters(false);
-    toast({
-      title: "Đã xóa bộ lọc",
-      description: "Tất cả bộ lọc đã được đặt lại về mặc định.",
-    });
   };
 
-  // Áp dụng bộ lọc (cho mobile)
-  const applyFilters = () => {
-    setShowFilters(false);
-    toast({
-      title: "Đã áp dụng bộ lọc",
-      description: "Bộ lọc sản phẩm của bạn đã được áp dụng.",
-    });
-  };
-
-  // Xử lý tìm kiếm
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast({
-      title: "Tìm kiếm",
-      description: `Đã tìm kiếm: ${searchQuery}`,
-    });
-  };
-
-  // Xử lý yêu thích
   const toggleFavorite = (productId: string) => {
     setOriginalProducts((prev) =>
       prev.map((product) =>
@@ -302,13 +219,8 @@ const ProductListing = () => {
         product.id === productId ? { ...product, isFavorite: !product.isFavorite } : product
       )
     );
-    toast({
-      title: "Đã cập nhật yêu thích",
-      description: "Danh sách yêu thích của bạn đã được cập nhật.",
-    });
   };
 
-  // Xử lý mua ngay
   const handleBuyNow = (product: Product) => {
     const cartItem = {
       id: product.id,
@@ -319,10 +231,10 @@ const ProductListing = () => {
       type: "product",
     };
     console.log("Đã thêm vào giỏ hàng:", cartItem);
-    toast({
-      title: "Đã thêm vào giỏ hàng",
-      description: `${product.name} đã được thêm vào giỏ hàng của bạn.`,
-    });
+  };
+
+  const loadMore = () => {
+    setDisplayCount((prev) => prev + 16);
   };
 
   return (
@@ -330,11 +242,10 @@ const ProductListing = () => {
       <main className="flex-1">
         <div className="container px-4 md:px-6 mx-auto max-w-7xl py-8">
           <h1 className="text-3xl font-bold mb-6 gradient-text">Tất Cả Sản Phẩm</h1>
-
-          {/* Thanh tìm kiếm và nút bộ lọc */}
-          <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <form onSubmit={handleSearch} className="flex w-full md:w-auto">
-              <div className="relative flex-1 md:w-64">
+          <div className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <Label className="text-lg font-medium mb-3 block">Tìm Kiếm</Label>
+              <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
@@ -345,27 +256,73 @@ const ProductListing = () => {
                   aria-label="Tìm kiếm sản phẩm"
                 />
               </div>
-              <Button type="submit" size="sm" className="ml-2" aria-label="Tìm kiếm">
-                Tìm kiếm
+            </div>
+            <div>
+              <Label className="text-lg font-medium mb-3 block">Khoảng Giá</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Select
+                  onValueChange={(value) => {
+                    switch (value) {
+                      case "all": setPriceRange([minPrice, maxPrice]); break;
+                      case "under-100000": setPriceRange([0, 100000]); break;
+                      case "100000-200000": setPriceRange([100000, 200000]); break;
+                      case "200000-500000": setPriceRange([200000, 500000]); break;
+                      case "over-500000": setPriceRange([500000, maxPrice]); break;
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-full pl-8" aria-label="Chọn khoảng giá">
+                    <SelectValue placeholder="Khoảng giá" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tất cả giá</SelectItem>
+                    <SelectItem value="under-100000">Dưới 100,000 VND</SelectItem>
+                    <SelectItem value="100000-200000">100,000 - 200,000 VND</SelectItem>
+                    <SelectItem value="200000-500000">200,000 - 500,000 VND</SelectItem>
+                    <SelectItem value="over-500000">Trên 500,000 VND</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label className="text-lg font-medium mb-3 block">Thứ Tự</Label>
+              <div className="relative">
+                <SortAsc className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Select value={sortBy} onValueChange={setSortBy} aria-label="Chọn cách sắp xếp">
+                  <SelectTrigger className="w-full pl-8">
+                    <SelectValue placeholder="Sắp xếp" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name_asc">Tên: A-Z</SelectItem>
+                    <SelectItem value="name_desc">Tên: Z-A</SelectItem>
+                    <SelectItem value="price_asc">Giá: Thấp-Cao</SelectItem>
+                    <SelectItem value="price_desc">Giá: Cao-Thấp</SelectItem>
+                    <SelectItem value="rating_desc">Đánh giá: Cao nhất</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex items-end gap-2 justify-end">
+              <Button variant="outline" onClick={clearFilters} aria-label="Xóa bộ lọc">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Xóa bộ lọc
               </Button>
               <Button
-                type="button"
                 variant="outline"
                 size="icon"
-                className="ml-2"
                 onClick={() => setShowFilters(!showFilters)}
-                aria-label="Mở bộ lọc"
+                aria-label="Tắt/mở bộ lọc"
               >
                 <SlidersHorizontal className="h-4 w-4" />
               </Button>
-            </form>
+            </div>
           </div>
-
-          {/* Bộ lọc */}
           {showFilters && (
             <div className="bg-white p-6 rounded-xl shadow-sm mb-8 animate-fade-in">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {/* Danh mục */}
                 <div>
                   <Label className="text-lg font-medium mb-3 block">Danh Mục</Label>
                   <div className="space-y-2">
@@ -377,18 +334,13 @@ const ProductListing = () => {
                           onCheckedChange={() => handleCategoryChange(category)}
                           aria-label={`Chọn danh mục ${category}`}
                         />
-                        <label
-                          htmlFor={`category-${category}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
+                        <label htmlFor={`category-${category}`} className="text-sm font-medium">
                           {category}
                         </label>
                       </div>
                     ))}
                   </div>
                 </div>
-
-                {/* Thương hiệu */}
                 <div>
                   <Label className="text-lg font-medium mb-3 block">Thương Hiệu</Label>
                   <div className="space-y-2">
@@ -400,18 +352,13 @@ const ProductListing = () => {
                           onCheckedChange={() => handleBrandChange(brand)}
                           aria-label={`Chọn thương hiệu ${brand}`}
                         />
-                        <label
-                          htmlFor={`brand-${brand}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
+                        <label htmlFor={`brand-${brand}`} className="text-sm font-medium">
                           {brand}
                         </label>
                       </div>
                     ))}
                   </div>
                 </div>
-
-                {/* Màu sắc */}
                 <div>
                   <Label className="text-lg font-medium mb-3 block">Màu Sắc</Label>
                   <div className="space-y-2">
@@ -423,18 +370,16 @@ const ProductListing = () => {
                           onCheckedChange={() => handleColorChange(color)}
                           aria-label={`Chọn màu ${color}`}
                         />
-                        <label
-                          htmlFor={`color-${color}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          {color}
+                        <label htmlFor={`color-${color}`} className="text-sm font-medium">
+                          <span
+                            className="inline-block w-6 h-6 mr-2 rounded-full"
+                            style={{ backgroundColor: `#${color}` }}
+                          ></span>
                         </label>
                       </div>
                     ))}
                   </div>
                 </div>
-
-                {/* Kích thước */}
                 <div>
                   <Label className="text-lg font-medium mb-3 block">Kích Thước</Label>
                   <div className="space-y-2">
@@ -446,83 +391,16 @@ const ProductListing = () => {
                           onCheckedChange={() => handleSizeChange(size)}
                           aria-label={`Chọn kích thước ${size}`}
                         />
-                        <label
-                          htmlFor={`size-${size}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
+                        <label htmlFor={`size-${size}`} className="text-sm font-medium">
                           {size}
                         </label>
                       </div>
                     ))}
                   </div>
                 </div>
-
-                {/* Khoảng giá */}
-                <div>
-                  <Label className="text-lg font-medium mb-3 block">Khoảng Giá</Label>
-                  <Select
-                    onValueChange={(value) => {
-                      switch (value) {
-                        case "all":
-                          setPriceRange([minPrice, maxPrice]);
-                          break;
-                        case "under-100000":
-                          setPriceRange([0, 100000]);
-                          break;
-                        case "100000-200000":
-                          setPriceRange([100000, 200000]);
-                          break;
-                        case "200000-500000":
-                          setPriceRange([200000, 500000]);
-                          break;
-                        case "over-500000":
-                          setPriceRange([500000, maxPrice]);
-                          break;
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="w-full" aria-label="Chọn khoảng giá">
-                      <SelectValue placeholder="Chọn khoảng giá" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tất cả giá</SelectItem>
-                      <SelectItem value="under-100000">Dưới 100,000 VND</SelectItem>
-                      <SelectItem value="100000-200000">100,000 - 200,000 VND</SelectItem>
-                      <SelectItem value="200000-500000">200,000 - 500,000 VND</SelectItem>
-                      <SelectItem value="over-500000">Trên 500,000 VND</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Sắp xếp */}
-                <div>
-                  <Label className="text-lg font-medium mb-3 block">Sắp Xếp Theo</Label>
-                  <Select value={sortBy} onValueChange={setSortBy} aria-label="Chọn cách sắp xếp">
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Chọn cách sắp xếp" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="name_asc">Tên: A đến Z</SelectItem>
-                      <SelectItem value="name_desc">Tên: Z đến A</SelectItem>
-                      <SelectItem value="price_asc">Giá: Thấp đến Cao</SelectItem>
-                      <SelectItem value="price_desc">Giá: Cao đến Thấp</SelectItem>
-                      <SelectItem value="rating_desc">Đánh giá: Cao nhất</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="mt-6 flex justify-end gap-4">
-                <Button variant="outline" onClick={clearFilters} aria-label="Xóa bộ lọc">
-                  Xóa Bộ Lọc
-                </Button>
-                <Button onClick={applyFilters} aria-label="Áp dụng bộ lọc">
-                  Áp Dụng Bộ Lọc
-                </Button>
               </div>
             </div>
           )}
-
-          {/* Kết quả tìm kiếm */}
           {error ? (
             <div className="py-12 text-center text-red-500" role="alert">{error}</div>
           ) : isLoading ? (
@@ -539,11 +417,8 @@ const ProductListing = () => {
             </div>
           ) : (
             <>
-              <div className="mb-4">
-                <p className="text-gray-600">{filteredProducts.length} sản phẩm được tìm thấy</p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {filteredProducts.map((product) => (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {filteredProducts.slice(0, displayCount).map((product) => (
                   <Card key={product.id} className="overflow-hidden group">
                     <div className="relative aspect-square">
                       <Link to={`/products/${product.id}`} aria-label={`Xem chi tiết ${product.name}`}>
@@ -555,13 +430,14 @@ const ProductListing = () => {
                         />
                       </Link>
                       {product.hot && (
-                        <Badge className="absolute top-2 left-2 bg-red-500 text-white">
+                        <Badge className="absolute top-2 left-2 bg-red-500 text-white rounded-lg flex items-center gap-1 px-3 py-1.5">
+                          <Flame className="w-4 h-4" aria-hidden="true" />
                           Đang bán chạy
                         </Badge>
                       )}
                       <button
                         onClick={() => toggleFavorite(product.id)}
-                        className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 hover:bg-white transition-colors"
+                        className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 hover:bg-white"
                         aria-label={product.isFavorite ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
                       >
                         <Heart
@@ -571,12 +447,12 @@ const ProductListing = () => {
                     </div>
                     <CardContent className="p-4">
                       <Link to={`/products/${product.id}`} aria-label={`Xem chi tiết ${product.name}`}>
-                        <h3 className="font-medium hover:text-crocus-600 transition-colors">
+                        <h3 className="text-lg font-semibold hover:text-crocus-600 transition-colors">
                           {product.name}
                         </h3>
                       </Link>
                       <div className="flex justify-between items-center mt-2">
-                        <p className="font-semibold">{formatter.format(product.price)}</p>
+                        <p className="text-lg font-bold">{formatter.format(product.price)}</p>
                         <div className="flex space-x-1" aria-label={`Đánh giá ${product.rating} sao`}>
                           {[...Array(5)].map((_, i) => (
                             <svg
@@ -600,10 +476,9 @@ const ProductListing = () => {
                         {product.mauSac.slice(0, 3).map((color) => (
                           <span
                             key={color}
-                            className="inline-block px-2 py-1 text-xs bg-gray-100 rounded-full"
-                          >
-                            {color}
-                          </span>
+                            className="inline-block w-6 h-6 rounded-full"
+                            style={{ backgroundColor: `#${color}` }}
+                          ></span>
                         ))}
                       </div>
                       <div className="mt-2 flex flex-wrap gap-1">
@@ -641,6 +516,13 @@ const ProductListing = () => {
                   </Card>
                 ))}
               </div>
+              {displayCount < filteredProducts.length && (
+                <div className="mt-8 text-center">
+                  <Button onClick={loadMore} aria-label="Xem thêm sản phẩm">
+                    Xem Thêm
+                  </Button>
+                </div>
+              )}
             </>
           )}
         </div>

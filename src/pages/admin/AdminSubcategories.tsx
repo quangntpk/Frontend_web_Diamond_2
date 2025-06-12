@@ -122,8 +122,8 @@ const AdminSubcategories = () => {
           response.status === 404
             ? "Không tìm thấy dữ liệu danh mục con."
             : response.status === 500
-            ? "Lỗi máy chủ, vui lòng thử lại sau."
-            : errorText || "Không thể lấy danh sách danh mục con."
+              ? "Lỗi máy chủ, vui lòng thử lại sau."
+              : errorText || "Không thể lấy danh sách danh mục con."
         );
       }
 
@@ -135,6 +135,10 @@ const AdminSubcategories = () => {
         icon: "error",
         title: "Lỗi",
         text: "Lỗi khi tải danh sách danh mục con: " + (error as Error).message,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true,
       });
     } finally {
       setLoading(false);
@@ -155,8 +159,8 @@ const AdminSubcategories = () => {
           response.status === 404
             ? "Không tìm thấy dữ liệu loại sản phẩm."
             : response.status === 500
-            ? "Lỗi máy chủ, vui lòng thử lại sau."
-            : errorText || "Không thể lấy danh sách loại sản phẩm."
+              ? "Lỗi máy chủ, vui lòng thử lại sau."
+              : errorText || "Không thể lấy danh sách loại sản phẩm."
         );
       }
 
@@ -173,6 +177,10 @@ const AdminSubcategories = () => {
         icon: "error",
         title: "Lỗi",
         text: "Lỗi khi tải danh sách loại sản phẩm: " + (error as Error).message,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true,
       });
     } finally {
       setLoadingProductTypes(false);
@@ -188,8 +196,8 @@ const AdminSubcategories = () => {
           (dmc.tenDanhMucCon?.toLowerCase().includes(searchTerm) || false) ||
           (kiHieu.toLowerCase().includes(searchTerm) || false)
         ) && (
-          kiHieuFilter === "all" || kiHieu === kiHieuFilter
-        );
+            kiHieuFilter === "all" || kiHieu === kiHieuFilter
+          );
       });
   }, [danhMucCons, searchTerm, kiHieuFilter]);
 
@@ -261,8 +269,8 @@ const AdminSubcategories = () => {
           response.status === 400
             ? errorText || "Dữ liệu không hợp lệ."
             : response.status === 500
-            ? "Lỗi máy chủ."
-            : errorText || "Không thể thêm danh mục con."
+              ? "Lỗi máy chủ."
+              : errorText || "Không thể thêm danh mục con."
         );
       }
 
@@ -276,13 +284,19 @@ const AdminSubcategories = () => {
         title: "Thành công",
         text: "Thêm danh mục con thành công!",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     } catch (error) {
       Swal.fire({
         icon: "error",
         title: "Lỗi",
         text: "Lỗi khi thêm danh mục con: " + (error as Error).message,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true,
       });
     } finally {
       setIsProcessing(false);
@@ -311,10 +325,10 @@ const AdminSubcategories = () => {
           response.status === 400
             ? errorText || "Dữ liệu không hợp lệ."
             : response.status === 404
-            ? "Danh mục con không tồn tại."
-            : response.status === 500
-            ? "Lỗi máy chủ."
-            : errorText || "Không thể cập nhật danh mục con."
+              ? "Danh mục con không tồn tại."
+              : response.status === 500
+                ? "Lỗi máy chủ."
+                : errorText || "Không thể cập nhật danh mục con."
         );
       }
 
@@ -327,13 +341,19 @@ const AdminSubcategories = () => {
         title: "Thành công",
         text: "Cập nhật danh mục con thành công!",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     } catch (error) {
       Swal.fire({
         icon: "error",
         title: "Lỗi",
         text: "Lỗi khi cập nhật danh mục con: " + (error as Error).message,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true,
       });
     } finally {
       setIsProcessing(false);
@@ -356,10 +376,10 @@ const AdminSubcategories = () => {
           response.status === 400
             ? errorText || "Dữ liệu không hợp lệ."
             : response.status === 404
-            ? "Danh mục con không tồn tại."
-            : response.status === 500
-            ? "Lỗi máy chủ."
-            : errorText || "Không thể xóa danh mục con."
+              ? "Danh mục con không tồn tại."
+              : response.status === 500
+                ? "Lỗi máy chủ."
+                : errorText || "Không thể xóa danh mục con."
         );
       }
 
@@ -371,13 +391,19 @@ const AdminSubcategories = () => {
         title: "Thành công",
         text: "Đã ẩn danh mục con!",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     } catch (error) {
       Swal.fire({
         icon: "error",
         title: "Lỗi",
         text: "Lỗi khi ẩn danh mục con: " + (error as Error).message,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true,
       });
     } finally {
       setIsProcessing(false);
@@ -401,10 +427,10 @@ const AdminSubcategories = () => {
           response.status === 400
             ? errorText || "Dữ liệu không hợp lệ."
             : response.status === 404
-            ? "Danh mục con không tồn tại."
-            : response.status === 500
-            ? "Lỗi máy chủ."
-            : errorText || "Không thể khôi phục danh mục con."
+              ? "Danh mục con không tồn tại."
+              : response.status === 500
+                ? "Lỗi máy chủ."
+                : errorText || "Không thể khôi phục danh mục con."
         );
       }
 
@@ -416,13 +442,19 @@ const AdminSubcategories = () => {
         title: "Thành công",
         text: "Đã khôi phục danh mục con!",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     } catch (error) {
       Swal.fire({
         icon: "error",
         title: "Lỗi",
         text: "Lỗi khi khôi phục danh mục con: " + (error as Error).message,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true,
       });
     } finally {
       setIsProcessing(false);
@@ -444,10 +476,10 @@ const AdminSubcategories = () => {
           response.status === 404
             ? "Danh mục con không tồn tại."
             : response.status === 409
-            ? "Không thể xóa vì có dữ liệu liên quan."
-            : response.status === 500
-            ? "Lỗi máy chủ."
-            : errorText || "Không thể xóa vĩnh viễn danh mục con."
+              ? "Không thể xóa vì có dữ liệu liên quan."
+              : response.status === 500
+                ? "Lỗi máy chủ."
+                : errorText || "Không thể xóa vĩnh viễn danh mục con."
         );
       }
 
@@ -459,13 +491,19 @@ const AdminSubcategories = () => {
         title: "Thành công",
         text: "Đã xóa vĩnh viễn danh mục con!",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     } catch (error) {
       Swal.fire({
         icon: "error",
         title: "Lỗi",
         text: "Lỗi khi xóa vĩnh viễn danh mục con: " + (error as Error).message,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true,
       });
     } finally {
       setIsProcessing(false);
@@ -901,7 +939,7 @@ const AdminSubcategories = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">Loại Sản Phẩm</label>
               <Select
                 value={danhMucConDangSua?.kiHieu}
-                onValueChange={() => {}}
+                onValueChange={() => { }}
                 disabled={true}
               >
                 <SelectTrigger>

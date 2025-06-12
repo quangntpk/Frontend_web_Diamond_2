@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/components/ui/use-toast";
+import SupportChat from "@/components/default/SupportChat";
 import axios from "axios";
 import {
   Menu,
@@ -398,6 +399,7 @@ const UserLayout = () => {
           </div>
         </div>
       </footer>
+      <SupportChat />
     </>
   );
 };

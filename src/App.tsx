@@ -61,9 +61,13 @@ import Newsletter from "./components/default/Newsletter";
 import Features from "./components/default/Features";
 import Testing from "./components/default/Testing";
 import DiaChi from "./components/default/DiaChi";
+import CategoryView from "./components/default/CategoryView"
+import SelectSize from "./components/default/SelectSize";
+import SupportChat from "./components/default/SupportChat";
 import AdminType from "./pages/admin/AdminType";
 import AdminSubcategories from "./pages/admin/AdminSubcategories";
 import AdminTrademark from "./pages/admin/AdminTrademark";
+import AdminHashTag from './pages/admin/AdminHashTag';
 
 const GoogleCallbackHandler = () => {
   const location = useLocation();
@@ -154,12 +158,14 @@ const App = () => (
               <Route path="user/profile/:userId" element={<ViewProfile />} />
               <Route path="/PaymentSuccess" element={<PaymentSuccess />} />
               <Route path="/PaymentFail" element={<PaymentFail />} />
-              <Route path="user/diachi" element={<DiaChi />} />
+              <Route path="diachi" element={<DiaChi />} />
               <Route path="hero" element={<HeroSection />} />
               <Route path="newsletter" element={<Newsletter />} />
               <Route path="features" element={<Features />} />
               <Route path="testing" element={<Testing />} />
-
+              <Route path="categoryview" element={<CategoryView />} />
+              <Route path="selectsize" element={<SelectSize />} />
+              <Route path="supportchat" element={<SupportChat />} />
             </Route>
 
             <Route path="/staff" element={<AdminLayout role="staff" />}>
@@ -202,7 +208,7 @@ const App = () => (
               <Route path="type" element={<AdminType />} />
               <Route path="subcategories" element={<AdminSubcategories />} />
               <Route path="trademark" element={<AdminTrademark />} />
-
+              <Route path="hashtag" element={<AdminHashTag />} />
 
               <Route path="*" element={<NotFound />} />
             </Route>

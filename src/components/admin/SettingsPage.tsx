@@ -601,7 +601,9 @@ export function SettingsPage() {
         text: "Tạo giao diện thành công",
         icon: "success",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
       setCurrentPage(1);
     } catch (error: unknown) {
@@ -612,7 +614,9 @@ export function SettingsPage() {
         text: errorMessage,
         icon: "error",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     }
   };
@@ -637,7 +641,9 @@ export function SettingsPage() {
         text: "Cập nhật giao diện thành công",
         icon: "success",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Lỗi khi cập nhật giao diện.";
@@ -647,7 +653,9 @@ export function SettingsPage() {
         text: errorMessage,
         icon: "error",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     }
   };
@@ -664,7 +672,9 @@ export function SettingsPage() {
         text: "Không thể xóa giao diện đang ở trạng thái hoạt động. Vui lòng chọn giao diện khác để kích hoạt trước khi xóa giao diện này.",
         icon: "error",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
       return;
     }
@@ -691,7 +701,9 @@ export function SettingsPage() {
         text: "xóa giao diện thành công",
         icon: "success",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
       const totalItems = giaoDiens.filter(gd => gd.trangThai !== 2).length - 1;
       const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -706,7 +718,9 @@ export function SettingsPage() {
         text: errorMessage,
         icon: "error",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     }
   };
@@ -735,7 +749,9 @@ export function SettingsPage() {
         text: "Khôi phục giao diện thành công",
         icon: "success",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
       const totalItems = giaoDiens.filter(gd => gd.trangThai === 2).length - 1;
       const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -750,7 +766,9 @@ export function SettingsPage() {
         text: errorMessage,
         icon: "error",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     }
   };
@@ -774,7 +792,9 @@ export function SettingsPage() {
         text: "Xóa giao diện vĩnh viễn thành công",
         icon: "success",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
       const totalItems = giaoDiens.filter(gd => gd.trangThai === 2).length - 1;
       const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -789,7 +809,9 @@ export function SettingsPage() {
         text: errorMessage,
         icon: "error",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     }
   };
@@ -812,7 +834,9 @@ export function SettingsPage() {
         text: "Cập nhật trạng thái thành công",
         icon: "success",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Lỗi khi cập nhật trạng thái.";
@@ -822,7 +846,9 @@ export function SettingsPage() {
         text: errorMessage,
         icon: "error",
         timer: 3000,
+        timerProgressBar: true,
         showConfirmButton: false,
+        showCloseButton: true,
       });
     }
   };

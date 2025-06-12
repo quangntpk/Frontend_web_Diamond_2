@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
+import { Contact, Settings } from "lucide-react";
 
 interface AdminLayoutProps {
   role: "staff" | "admin";
@@ -24,6 +25,8 @@ const getPageTitle = (pathname: string): string => {
     trademark: "Thương hiệu",
     type: "Loại sản phẩm",
     subcategories: "Danh mục con",
+    contact: "Liên hệ",
+    hashtag:"HashTag"
   };
   return titles[page] || page.charAt(0).toUpperCase() + page.slice(1);
 };

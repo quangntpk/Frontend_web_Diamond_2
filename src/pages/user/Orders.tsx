@@ -334,7 +334,7 @@ const OrderHistory = () => {
         return;
       }
 
-      const response = await axios.get(`http://localhost:5261/api/user/orders/${maNguoiDung}`, {
+      const response = await axios.get(`http://localhost:5261/api/orders/${maNguoiDung}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       const rawOrders = response.data;
@@ -510,7 +510,7 @@ const OrderHistory = () => {
         return;
       }
 
-      const response = await axios.get('http://localhost:5261/api/user/orders/search', {
+      const response = await axios.get('http://localhost:5261/api/orders/search', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -612,7 +612,7 @@ const OrderHistory = () => {
       }
 
       const response = await axios.put<CancelOrderResponse>(
-        `http://localhost:5261/api/user/orders/cancel/${orderIdNumber}`,
+        `http://localhost:5261/api/orders/cancel/${orderIdNumber}`,
         cancelReason,
         {
           headers: {

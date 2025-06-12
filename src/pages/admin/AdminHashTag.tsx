@@ -39,9 +39,9 @@ import {
 import { Search, MoreVertical, Upload, X, Loader2, ChevronLeft, ChevronRight, Settings2 } from "lucide-react";
 import Swal from "sweetalert2";
 
-interface Trademark {
-  maThuongHieu: number;
-  tenThuongHieu: string;
+interface Hashtag {
+  maHashTag: number;
+  tenHashTag: string;
   hinhAnh?: string;
   trangThai?: number;
 }
@@ -49,8 +49,8 @@ interface Trademark {
 const ITEMS_PER_PAGE = 10;
 const API_URL = import.meta.env.VITE_API_URL;
 
-const AdminTrademark = () => {
-  const [trademarks, setTrademarks] = useState<Trademark[]>([]);
+const AdminHashTag = () => {
+  const [hashtags, setHashtags] = useState<Hashtag[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
   const [loading, setLoading] = useState<boolean>(true);
@@ -61,13 +61,13 @@ const AdminTrademark = () => {
   const [moModalXoaVinhVien, setMoModalXoaVinhVien] = useState(false);
   const [moModalKhoiPhuc, setMoModalKhoiPhuc] = useState(false);
   const [moModalChiTiet, setMoModalChiTiet] = useState(false);
-  const [trademarkCanXoa, setTrademarkCanXoa] = useState<Trademark | null>(null);
-  const [trademarkCanXoaVinhVien, setTrademarkCanXoaVinhVien] = useState<Trademark | null>(null);
-  const [trademarkCanKhoiPhuc, setTrademarkCanKhoiPhuc] = useState<Trademark | null>(null);
-  const [trademarkChiTiet, setTrademarkChiTiet] = useState<Trademark | null>(null);
-  const [tenThuongHieuMoi, setTenThuongHieuMoi] = useState("");
+  const [hashtagCanXoa, setHashtagCanXoa] = useState<Hashtag | null>(null);
+  const [hashtagCanXoaVinhVien, setHashtagCanXoaVinhVien] = useState<Hashtag | null>(null);
+  const [hashtagCanKhoiPhuc, setHashtagCanKhoiPhuc] = useState<Hashtag | null>(null);
+  const [hashtagChiTiet, setHashtagChiTiet] = useState<Hashtag | null>(null);
+  const [tenHashTagMoi, setTenHashTagMoi] = useState("");
   const [hinhAnhMoi, setHinhAnhMoi] = useState("");
-  const [trademarkDangSua, setTrademarkDangSua] = useState<Trademark | null>(null);
+  const [hashtagDangSua, setHashtagDangSua] = useState<Hashtag | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
   const [errorsThem, setErrorsThem] = useState({ ten: "", hinhAnh: "" });
@@ -88,22 +88,22 @@ const AdminTrademark = () => {
     return imageString;
   };
 
-  const fetchTrademarks = useCallback(async () => {
+  const fetchHashtags = useCallback(async () => {
     try {
       setLoading(true);
       const targetStatus = activeTab === "active" ? 1 : 0;
-      const response = await fetch(`${API_URL}/api/ThuongHieu?trangThai=${targetStatus}`);
+      const response = await fetch(`${API_URL}/api/HashTag?trangThai=${targetStatus}`);
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(errorText || "Không thể lấy danh sách thương hiệu");
+        throw new Error(errorText || "Không thể lấy danh sách hashtag");
       }
       const data = await response.json();
-      setTrademarks(data);
+      setHashtags(data);
     } catch (error) {
       Swal.fire({
         icon: "error",
         title: "Lỗi",
-        text: "Lỗi khi tải danh sách thương hiệu: " + (error as Error).message,
+        text: "Lỗi khi tải danh sách hashtag: " + (error as Error).message,
         timer: 3000,
         timerProgressBar: true,
         showConfirmButton: false,
@@ -119,21 +119,21 @@ const AdminTrademark = () => {
     setCurrentPage(1);
   };
 
-  const sortedAndFilteredTrademarks = useMemo(() => {
+  const sortedAndFilteredHashtags = useMemo(() => {
     const targetStatus = activeTab === "active" ? 1 : 0;
-    const filtered = trademarks
+    const filtered = hashtags
       .filter(
         (th) =>
           th.trangThai === targetStatus &&
-          (th.tenThuongHieu.toLowerCase().includes(searchTerm) ||
-            th.maThuongHieu.toString().includes(searchTerm))
+          (th.tenHashTag.toLowerCase().includes(searchTerm) ||
+            th.maHashTag.toString().includes(searchTerm))
       )
-      .sort((a, b) => b.maThuongHieu - a.maThuongHieu);
+      .sort((a, b) => b.maHashTag - a.maHashTag);
     return filtered;
-  }, [trademarks, searchTerm, activeTab]);
+  }, [hashtags, searchTerm, activeTab]);
 
-  const totalPages = Math.ceil(sortedAndFilteredTrademarks.length / ITEMS_PER_PAGE);
-  const paginatedTrademarks = sortedAndFilteredTrademarks.slice(
+  const totalPages = Math.ceil(sortedAndFilteredHashtags.length / ITEMS_PER_PAGE);
+  const paginatedHashtags = sortedAndFilteredHashtags.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
@@ -192,8 +192,8 @@ const AdminTrademark = () => {
   const validateThem = () => {
     let valid = true;
     const newErrors = { ten: "", hinhAnh: "" };
-    if (!tenThuongHieuMoi.trim()) {
-      newErrors.ten = "Tên thương hiệu không được để trống!";
+    if (!tenHashTagMoi.trim()) {
+      newErrors.ten = "Tên hashtag không được để trống!";
       valid = false;
     }
     if (!hinhAnhMoi) {
@@ -207,11 +207,11 @@ const AdminTrademark = () => {
   const validateSua = () => {
     let valid = true;
     const newErrors = { ten: "", hinhAnh: "" };
-    if (!trademarkDangSua?.tenThuongHieu?.trim()) {
-      newErrors.ten = "Tên thương hiệu không được để trống!";
+    if (!hashtagDangSua?.tenHashTag?.trim()) {
+      newErrors.ten = "Tên hashtag không được để trống!";
       valid = false;
     }
-    if (!trademarkDangSua?.hinhAnh) {
+    if (!hashtagDangSua?.hinhAnh) {
       newErrors.hinhAnh = "Hình ảnh không được để trống!";
       valid = false;
     }
@@ -219,33 +219,33 @@ const AdminTrademark = () => {
     return valid;
   };
 
-  const themTrademark = async () => {
+  const themHashtag = async () => {
     if (!validateThem()) return;
     try {
       setIsProcessing(true);
       const base64Image = getBase64(hinhAnhMoi);
-      const response = await fetch(`${API_URL}/api/ThuongHieu`, {
+      const response = await fetch(`${API_URL}/api/HashTag`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          TenThuongHieu: tenThuongHieuMoi,
+          TenHashTag: tenHashTagMoi,
           HinhAnh: base64Image,
           TrangThai: 1,
         }),
       });
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(errorText || "Không thể thêm thương hiệu");
+        throw new Error(errorText || "Không thể thêm hashtag");
       }
-      setTenThuongHieuMoi("");
+      setTenHashTagMoi("");
       setHinhAnhMoi("");
       setErrorsThem({ ten: "", hinhAnh: "" });
       setMoModalThem(false);
-      await fetchTrademarks();
+      await fetchHashtags();
       Swal.fire({
         icon: "success",
         title: "Thành công",
-        text: "Thêm thương hiệu thành công!",
+        text: "Thêm hashtag thành công!",
         timer: 3000,
         timerProgressBar: true,
         showConfirmButton: false,
@@ -255,7 +255,7 @@ const AdminTrademark = () => {
       Swal.fire({
         icon: "error",
         title: "Lỗi",
-        text: "Lỗi khi thêm thương hiệu: " + (error as Error).message,
+        text: "Lỗi khi thêm hashtag: " + (error as Error).message,
         timer: 3000,
         timerProgressBar: true,
         showConfirmButton: false,
@@ -266,42 +266,42 @@ const AdminTrademark = () => {
     }
   };
 
-  const suaTrademark = async () => {
-    if (!validateSua() || !trademarkDangSua) return;
+  const suaHashtag = async () => {
+    if (!validateSua() || !hashtagDangSua) return;
     try {
       setIsProcessing(true);
       setErrorMessage("");
-      const base64Image = getBase64(trademarkDangSua.hinhAnh || "");
-      const response = await fetch(`${API_URL}/api/ThuongHieu/${trademarkDangSua.maThuongHieu}`, {
+      const base64Image = getBase64(hashtagDangSua.hinhAnh || "");
+      const response = await fetch(`${API_URL}/api/HashTag/${hashtagDangSua.maHashTag}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          MaThuongHieu: trademarkDangSua.maThuongHieu,
-          TenThuongHieu: trademarkDangSua.tenThuongHieu,
+          MaHashTag: hashtagDangSua.maHashTag,
+          TenHashTag: hashtagDangSua.tenHashTag,
           HinhAnh: base64Image,
-          TrangThai: trademarkDangSua.trangThai,
+          TrangThai: hashtagDangSua.trangThai,
         }),
       });
       if (!response.ok) {
         const errorText = await response.text();
         if (response.status === 404) {
-          throw new Error("Thương hiệu không tồn tại");
+          throw new Error("Hashtag không tồn tại");
         } else if (response.status === 409) {
-          setErrorMessage("Tên thương hiệu đã tồn tại");
+          setErrorMessage("Tên hashtag đã tồn tại");
           return;
         } else if (response.status === 500) {
           throw new Error("Lỗi máy chủ, vui lòng thử lại sau");
         }
-        throw new Error(errorText || "Không thể sửa thương hiệu");
+        throw new Error(errorText || "Không thể sửa hashtag");
       }
       setMoModalSua(false);
-      setTrademarkDangSua(null);
+      setHashtagDangSua(null);
       setErrorMessage("");
-      await fetchTrademarks();
+      await fetchHashtags();
       Swal.fire({
         icon: "success",
         title: "Thành công",
-        text: "Sửa thương hiệu thành công!",
+        text: "Sửa hashtag thành công!",
         timer: 3000,
         timerProgressBar: true,
         showConfirmButton: false,
@@ -311,7 +311,7 @@ const AdminTrademark = () => {
       Swal.fire({
         icon: "error",
         title: "Lỗi",
-        text: "Lỗi khi sửa thương hiệu: " + (error as Error).message,
+        text: "Lỗi khi sửa hashtag: " + (error as Error).message,
         timer: 3000,
         timerProgressBar: true,
         showConfirmButton: false,
@@ -322,39 +322,39 @@ const AdminTrademark = () => {
     }
   };
 
-  const anTrademark = async () => {
-    if (!trademarkCanXoa) return;
+  const anHashtag = async () => {
+    if (!hashtagCanXoa) return;
     try {
       setIsProcessing(true);
-      const response = await fetch(`${API_URL}/api/ThuongHieu/${trademarkCanXoa.maThuongHieu}`, {
+      const response = await fetch(`${API_URL}/api/HashTag/${hashtagCanXoa.maHashTag}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          MaThuongHieu: trademarkCanXoa.maThuongHieu,
-          TenThuongHieu: trademarkCanXoa.tenThuongHieu,
-          HinhAnh: trademarkCanXoa.hinhAnh,
-          TrangThai: trademarkCanXoa.trangThai === 1 ? 0 : 1,
+          MaHashTag: hashtagCanXoa.maHashTag,
+          TenHashTag: hashtagCanXoa.tenHashTag,
+          HinhAnh: hashtagCanXoa.hinhAnh,
+          TrangThai: hashtagCanXoa.trangThai === 1 ? 0 : 1,
         }),
       });
       if (!response.ok) {
         const errorText = await response.text();
         if (response.status === 404) {
-          throw new Error("Thương hiệu không tồn tại");
+          throw new Error("Hashtag không tồn tại");
         } else if (response.status === 409) {
-          throw new Error("Tên thương hiệu đã tồn tại");
+          throw new Error("Tên hashtag đã tồn tại");
         } else if (response.status === 500) {
           throw new Error("Lỗi máy chủ, vui lòng thử lại sau");
         }
-        throw new Error(errorText || "Không thể xóa thương hiệu");
+        throw new Error(errorText || "Không thể xóa hashtag");
       }
       setMoModalXoa(false);
-      setTrademarkCanXoa(null);
+      setHashtagCanXoa(null);
       setCurrentPage(1);
-      await fetchTrademarks();
+      await fetchHashtags();
       Swal.fire({
         icon: "success",
         title: "Thành công",
-        text: "Xóa thương hiệu thành công!",
+        text: "Xóa hashtag thành công!",
         timer: 3000,
         timerProgressBar: true,
         showConfirmButton: false,
@@ -364,7 +364,7 @@ const AdminTrademark = () => {
       Swal.fire({
         icon: "error",
         title: "Lỗi",
-        text: "Lỗi khi xóa thương hiệu: " + (error as Error).message,
+        text: "Lỗi khi xóa hashtag: " + (error as Error).message,
         timer: 3000,
         timerProgressBar: true,
         showConfirmButton: false,
@@ -375,39 +375,39 @@ const AdminTrademark = () => {
     }
   };
 
-  const khoiPhucTrademark = async () => {
-    if (!trademarkCanKhoiPhuc) return;
+  const khoiPhucHashtag = async () => {
+    if (!hashtagCanKhoiPhuc) return;
     try {
       setIsProcessing(true);
-      const response = await fetch(`${API_URL}/api/ThuongHieu/${trademarkCanKhoiPhuc.maThuongHieu}`, {
+      const response = await fetch(`${API_URL}/api/HashTag/${hashtagCanKhoiPhuc.maHashTag}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          MaThuongHieu: trademarkCanKhoiPhuc.maThuongHieu,
-          TenThuongHieu: trademarkCanKhoiPhuc.tenThuongHieu,
-          HinhAnh: trademarkCanKhoiPhuc.hinhAnh,
+          MaHashTag: hashtagCanKhoiPhuc.maHashTag,
+          TenHashTag: hashtagCanKhoiPhuc.tenHashTag,
+          HinhAnh: hashtagCanKhoiPhuc.hinhAnh,
           TrangThai: 1,
         }),
       });
       if (!response.ok) {
         const errorText = await response.text();
         if (response.status === 404) {
-          throw new Error("Thương hiệu không tồn tại");
+          throw new Error("Hashtag không tồn tại");
         } else if (response.status === 409) {
-          throw new Error("Tên thương hiệu đã tồn tại");
+          throw new Error("Tên hashtag đã tồn tại");
         } else if (response.status === 500) {
           throw new Error("Lỗi máy chủ, vui lòng thử lại sau");
         }
-        throw new Error(errorText || "Không thể khôi phục thương hiệu");
+        throw new Error(errorText || "Không thể khôi phục hashtag");
       }
       setMoModalKhoiPhuc(false);
-      setTrademarkCanKhoiPhuc(null);
+      setHashtagCanKhoiPhuc(null);
       setCurrentPage(1);
-      await fetchTrademarks();
+      await fetchHashtags();
       Swal.fire({
         icon: "success",
         title: "Thành công",
-        text: "Khôi phục thương hiệu thành công!",
+        text: "Khôi phục hashtag thành công!",
         timer: 3000,
         timerProgressBar: true,
         showConfirmButton: false,
@@ -417,7 +417,7 @@ const AdminTrademark = () => {
       Swal.fire({
         icon: "error",
         title: "Lỗi",
-        text: "Lỗi khi khôi phục thương hiệu: " + (error as Error).message,
+        text: "Lỗi khi khôi phục hashtag: " + (error as Error).message,
         timer: 3000,
         timerProgressBar: true,
         showConfirmButton: false,
@@ -428,32 +428,32 @@ const AdminTrademark = () => {
     }
   };
 
-  const xoaVinhVienTrademark = async () => {
-    if (!trademarkCanXoaVinhVien) return;
+  const xoaVinhVienHashtag = async () => {
+    if (!hashtagCanXoaVinhVien) return;
     try {
       setIsProcessing(true);
-      const response = await fetch(`${API_URL}/api/ThuongHieu/${trademarkCanXoaVinhVien.maThuongHieu}`, {
+      const response = await fetch(`${API_URL}/api/HashTag/${hashtagCanXoaVinhVien.maHashTag}`, {
         method: "DELETE",
       });
       if (!response.ok) {
         const errorText = await response.text();
         if (response.status === 404) {
-          throw new Error("Thương hiệu không tồn tại");
+          throw new Error("Hashtag không tồn tại");
         } else if (response.status === 409) {
           throw new Error("Không thể xóa vì có dữ liệu liên quan");
         } else if (response.status === 500) {
           throw new Error("Lỗi máy chủ, vui lòng thử lại sau");
         }
-        throw new Error(errorText || "Không thể xóa thương hiệu");
+        throw new Error(errorText || "Không thể xóa hashtag");
       }
       setMoModalXoaVinhVien(false);
-      setTrademarkCanXoaVinhVien(null);
+      setHashtagCanXoaVinhVien(null);
       setCurrentPage(1);
-      await fetchTrademarks();
+      await fetchHashtags();
       Swal.fire({
         icon: "success",
         title: "Thành công",
-        text: "Xóa vĩnh viễn thương hiệu thành công!",
+        text: "Xóa vĩnh viễn hashtag thành công!",
         timer: 3000,
         timerProgressBar: true,
         showConfirmButton: false,
@@ -463,7 +463,7 @@ const AdminTrademark = () => {
       Swal.fire({
         icon: "error",
         title: "Lỗi",
-        text: "Lỗi khi xóa thương hiệu: " + (error as Error).message,
+        text: "Lỗi khi xóa hashtag: " + (error as Error).message,
         timer: 3000,
         timerProgressBar: true,
         showConfirmButton: false,
@@ -475,14 +475,14 @@ const AdminTrademark = () => {
   };
 
   useEffect(() => {
-    fetchTrademarks();
-  }, [fetchTrademarks]);
+    fetchHashtags();
+  }, [fetchHashtags]);
 
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight text-gray-800">
-          Quản Lý Thương Hiệu
+          Quản Lý Hashtag
         </h1>
         {activeTab === "active" && (
           <Button
@@ -490,7 +490,7 @@ const AdminTrademark = () => {
             onClick={() => setMoModalThem(true)}
             disabled={loading || isProcessing}
           >
-            <FaPlus className="mr-2 h-4 w-4" /> Thêm Thương Hiệu
+            <FaPlus className="mr-2 h-4 w-4" /> Thêm Hashtag
           </Button>
         )}
       </div>
@@ -498,10 +498,10 @@ const AdminTrademark = () => {
       <Tabs defaultValue="active" className="w-full" onValueChange={(value) => setActiveTab(value as "active" | "inactive")}>
         <TabsList className="grid w-full md:w-auto grid-cols-2 gap-1">
           <TabsTrigger value="active" className="flex items-center gap-2">
-            <Settings2 className="h-4 w-4" /> Danh Sách Thương Hiệu
+            <Settings2 className="h-4 w-4" /> Danh Sách Hashtag
           </TabsTrigger>
           <TabsTrigger value="inactive" className="flex items-center gap-2">
-            <Settings2 className="h-4 w-4" /> Khôi Phục Thương Hiệu
+            <Settings2 className="h-4 w-4" /> Khôi Phục Hashtag
           </TabsTrigger>
         </TabsList>
 
@@ -510,7 +510,7 @@ const AdminTrademark = () => {
             <div className="relative">
               <Input
                 type="search"
-                placeholder="Tìm kiếm thương hiệu..."
+                placeholder="Tìm kiếm hashtag..."
                 value={searchTerm}
                 onChange={handleSearch}
                 className="w-full md:w-[820px] pl-10"
@@ -527,7 +527,7 @@ const AdminTrademark = () => {
             <>
               <Card>
                 <CardHeader>
-                  <CardTitle>Danh Sách Thương Hiệu</CardTitle>
+                  <CardTitle>Danh Sách Hashtag</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Table>
@@ -535,20 +535,20 @@ const AdminTrademark = () => {
                       <TableRow>
                         <TableHead>STT</TableHead>
                         <TableHead>Hình Ảnh</TableHead>
-                        <TableHead>Tên Thương Hiệu</TableHead>
+                        <TableHead>Tên Hashtag</TableHead>
                         <TableHead>Hành Động</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {paginatedTrademarks.length > 0 ? (
-                        paginatedTrademarks.map((th, index) => (
-                          <TableRow key={th.maThuongHieu} className="hover:bg-muted/50">
+                      {paginatedHashtags.length > 0 ? (
+                        paginatedHashtags.map((th, index) => (
+                          <TableRow key={th.maHashTag} className="hover:bg-muted/50">
                             <TableCell>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                             <TableCell>
                               {th.hinhAnh ? (
                                 <img
                                   src={formatBase64Image(th.hinhAnh)}
-                                  alt={th.tenThuongHieu}
+                                  alt={th.tenHashTag}
                                   className="h-12 w-12 object-cover rounded"
                                   onError={(e) => (e.currentTarget.src = "/placeholder-image.jpg")}
                                 />
@@ -556,7 +556,7 @@ const AdminTrademark = () => {
                                 "Không có hình"
                               )}
                             </TableCell>
-                            <TableCell>{th.tenThuongHieu}</TableCell>
+                            <TableCell>{th.tenHashTag}</TableCell>
                             <TableCell>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -567,7 +567,7 @@ const AdminTrademark = () => {
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem
                                     onClick={() => {
-                                      setTrademarkChiTiet(th);
+                                      setHashtagChiTiet(th);
                                       setMoModalChiTiet(true);
                                     }}
                                     className="text-green-700"
@@ -576,7 +576,7 @@ const AdminTrademark = () => {
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() => {
-                                      setTrademarkDangSua({ ...th });
+                                      setHashtagDangSua({ ...th });
                                       setMoModalSua(true);
                                     }}
                                     className="text-blue-700"
@@ -585,7 +585,7 @@ const AdminTrademark = () => {
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() => {
-                                      setTrademarkCanXoa(th);
+                                      setHashtagCanXoa(th);
                                       setMoModalXoa(true);
                                     }}
                                     className="text-red-700"
@@ -600,7 +600,7 @@ const AdminTrademark = () => {
                       ) : (
                         <TableRow>
                           <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                            Không tìm thấy thương hiệu nào.
+                            Không tìm thấy hashtag nào.
                           </TableCell>
                         </TableRow>
                       )}
@@ -652,7 +652,7 @@ const AdminTrademark = () => {
             <div className="relative">
               <Input
                 type="search"
-                placeholder="Tìm kiếm thương hiệu đã xóa..."
+                placeholder="Tìm kiếm hashtag đã xóa..."
                 value={searchTerm}
                 onChange={handleSearch}
                 className="w-full md:w-[820px] pl-10"
@@ -669,7 +669,7 @@ const AdminTrademark = () => {
             <>
               <Card>
                 <CardHeader>
-                  <CardTitle>Danh Sách Thương Hiệu Đã Xóa</CardTitle>
+                  <CardTitle>Danh Sách Hashtag Đã Xóa</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Table>
@@ -677,20 +677,20 @@ const AdminTrademark = () => {
                       <TableRow>
                         <TableHead>STT</TableHead>
                         <TableHead>Hình Ảnh</TableHead>
-                        <TableHead>Tên Thương Hiệu</TableHead>
+                        <TableHead>Tên Hashtag</TableHead>
                         <TableHead>Hành Động</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {paginatedTrademarks.length > 0 ? (
-                        paginatedTrademarks.map((th, index) => (
-                          <TableRow key={th.maThuongHieu} className="hover:bg-muted/50">
+                      {paginatedHashtags.length > 0 ? (
+                        paginatedHashtags.map((th, index) => (
+                          <TableRow key={th.maHashTag} className="hover:bg-muted/50">
                             <TableCell>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                             <TableCell>
                               {th.hinhAnh ? (
                                 <img
                                   src={formatBase64Image(th.hinhAnh)}
-                                  alt={th.tenThuongHieu}
+                                  alt={th.tenHashTag}
                                   className="h-12 w-12 object-cover rounded"
                                   onError={(e) => (e.currentTarget.src = "/placeholder-image.jpg")}
                                 />
@@ -698,7 +698,7 @@ const AdminTrademark = () => {
                                 "Không có hình"
                               )}
                             </TableCell>
-                            <TableCell>{th.tenThuongHieu}</TableCell>
+                            <TableCell>{th.tenHashTag}</TableCell>
                             <TableCell>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -709,7 +709,7 @@ const AdminTrademark = () => {
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem
                                     onClick={() => {
-                                      setTrademarkChiTiet(th);
+                                      setHashtagChiTiet(th);
                                       setMoModalChiTiet(true);
                                     }}
                                     className="text-green-700"
@@ -718,7 +718,7 @@ const AdminTrademark = () => {
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() => {
-                                      setTrademarkCanKhoiPhuc(th);
+                                      setHashtagCanKhoiPhuc(th);
                                       setMoModalKhoiPhuc(true);
                                     }}
                                     className="text-blue-700"
@@ -727,7 +727,7 @@ const AdminTrademark = () => {
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() => {
-                                      setTrademarkCanXoaVinhVien(th);
+                                      setHashtagCanXoaVinhVien(th);
                                       setMoModalXoaVinhVien(true);
                                     }}
                                     className="text-red-700"
@@ -742,7 +742,7 @@ const AdminTrademark = () => {
                       ) : (
                         <TableRow>
                           <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                            Không tìm thấy thương hiệu nào.
+                            Không tìm thấy hashtag nào.
                           </TableCell>
                         </TableRow>
                       )}
@@ -793,19 +793,19 @@ const AdminTrademark = () => {
       <Dialog open={moModalThem} onOpenChange={setMoModalThem}>
         <DialogContent className="max-w-4xl w-full">
           <DialogHeader>
-            <DialogTitle>Thêm Thương Hiệu</DialogTitle>
-            <DialogDescription>Nhập thông tin thương hiệu mới.</DialogDescription>
+            <DialogTitle>Thêm Hashtag</DialogTitle>
+            <DialogDescription>Nhập thông tin hashtag mới.</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tên Thương Hiệu</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tên Hashtag</label>
               <Input
-                value={tenThuongHieuMoi}
+                value={tenHashTagMoi}
                 onChange={(e) => {
-                  setTenThuongHieuMoi(e.target.value);
+                  setTenHashTagMoi(e.target.value);
                   setErrorsThem((prev) => ({ ...prev, ten: "" }));
                 }}
-                placeholder="Tên thương hiệu"
+                placeholder="Tên hashtag"
                 disabled={isProcessing}
               />
               {errorsThem.ten && <p className="text-red-500 text-sm mt-1">{errorsThem.ten}</p>}
@@ -861,7 +861,7 @@ const AdminTrademark = () => {
             <Button variant="ghost" onClick={() => setMoModalThem(false)} disabled={isProcessing} className="flex items-center gap-2 bg-[#e7e4f5]">
               <X className="h-4 w-4" /> Hủy
             </Button>
-            <Button onClick={themTrademark} disabled={isProcessing} className="bg-[#9b87f5] text-white hover:bg-[#8a76e3] flex items-center gap-2">
+            <Button onClick={themHashtag} disabled={isProcessing} className="bg-[#9b87f5] text-white hover:bg-[#8a76e3] flex items-center gap-2">
               {isProcessing ? "Đang xử lý..." : "Thêm"}
               <FaPlus className="h-4 w-4" />
             </Button>
@@ -869,25 +869,24 @@ const AdminTrademark = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Modal Sửa */}
       <Dialog open={moModalSua} onOpenChange={setMoModalSua}>
         <DialogContent className="max-w-4xl w-full">
           <DialogHeader>
-            <DialogTitle>Sửa Thương Hiệu</DialogTitle>
-            <DialogDescription>Cập nhật thông tin thương hiệu.</DialogDescription>
+            <DialogTitle>Sửa Hashtag</DialogTitle>
+            <DialogDescription>Cập nhật thông tin hashtag.</DialogDescription>
           </DialogHeader>
-          {trademarkDangSua && (
+          {hashtagDangSua && (
             <div className="flex flex-col gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tên Thương Hiệu</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tên Hashtag</label>
                 <Input
-                  value={trademarkDangSua.tenThuongHieu}
+                  value={hashtagDangSua.tenHashTag}
                   onChange={(e) => {
-                    setTrademarkDangSua({ ...trademarkDangSua, tenThuongHieu: e.target.value });
+                    setHashtagDangSua({ ...hashtagDangSua, tenHashTag: e.target.value });
                     setErrorsSua((prev) => ({ ...prev, ten: "" }));
                     setErrorMessage("");
                   }}
-                  placeholder="Tên thương hiệu"
+                  placeholder="Tên hashtag"
                   disabled={isProcessing}
                 />
                 {errorsSua.ten && <p className="text-red-500 text-sm mt-1">{errorsSua.ten}</p>}
@@ -902,15 +901,15 @@ const AdminTrademark = () => {
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                 >
-                  {trademarkDangSua.hinhAnh ? (
+                  {hashtagDangSua.hinhAnh ? (
                     <div className="relative">
                       <img
-                        src={formatBase64Image(trademarkDangSua.hinhAnh)}
+                        src={formatBase64Image(hashtagDangSua.hinhAnh)}
                         alt="Preview"
                         className="h-20 w-20 mx-auto object-cover rounded"
                       />
                       <button
-                        onClick={() => setTrademarkDangSua({ ...trademarkDangSua, hinhAnh: "" })}
+                        onClick={() => setHashtagDangSua({ ...hashtagDangSua, hinhAnh: "" })}
                         className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
                         disabled={isProcessing}
                       >
@@ -932,7 +931,7 @@ const AdminTrademark = () => {
                           const file = e.target.files?.[0];
                           if (file && file.size <= 2 * 1024 * 1024) {
                             const reader = new FileReader();
-                            reader.onloadend = () => setTrademarkDangSua({ ...trademarkDangSua, hinhAnh: reader.result as string });
+                            reader.onloadend = () => setHashtagDangSua({ ...hashtagDangSua, hinhAnh: reader.result as string });
                             reader.readAsDataURL(file);
                           } else {
                             Swal.fire({
@@ -962,7 +961,7 @@ const AdminTrademark = () => {
             <Button variant="ghost" onClick={() => setMoModalSua(false)} disabled={isProcessing} className="flex items-center gap-2 bg-[#e7e4f5]">
               <X className="h-4 w-4" /> Hủy
             </Button>
-            <Button onClick={suaTrademark} disabled={isProcessing} className="bg-[#9b87f5] text-white hover:bg-[#8a76e3] flex items-center gap-2">
+            <Button onClick={suaHashtag} disabled={isProcessing} className="bg-[#9b87f5] text-white hover:bg-[#8a76e3] flex items-center gap-2">
               {isProcessing ? "Đang xử lý..." : "Lưu"}
               <FaEdit className="h-4 w-4" />
             </Button>
@@ -973,21 +972,21 @@ const AdminTrademark = () => {
       <Dialog open={moModalChiTiet} onOpenChange={setMoModalChiTiet}>
         <DialogContent className="max-w-4xl w-full">
           <DialogHeader>
-            <DialogTitle>Chi Tiết Thương Hiệu</DialogTitle>
-            <DialogDescription>Thông tin chi tiết của thương hiệu.</DialogDescription>
+            <DialogTitle>Chi Tiết Hashtag</DialogTitle>
+            <DialogDescription>Thông tin chi tiết của hashtag.</DialogDescription>
           </DialogHeader>
-          {trademarkChiTiet && (
+          {hashtagChiTiet && (
             <div className="flex flex-col gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tên Thương Hiệu</label>
-                <Input value={trademarkChiTiet.tenThuongHieu} disabled />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tên Hashtag</label>
+                <Input value={hashtagChiTiet.tenHashTag} disabled />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Hình Ảnh</label>
-                {trademarkChiTiet.hinhAnh ? (
+                {hashtagChiTiet.hinhAnh ? (
                   <img
-                    src={formatBase64Image(trademarkChiTiet.hinhAnh)}
-                    alt={trademarkChiTiet.tenThuongHieu}
+                    src={formatBase64Image(hashtagChiTiet.hinhAnh)}
+                    alt={hashtagChiTiet.tenHashTag}
                     className="h-20 w-20 object-cover rounded"
                   />
                 ) : (
@@ -1009,14 +1008,14 @@ const AdminTrademark = () => {
           <DialogHeader>
             <DialogTitle>Xác Nhận Xóa</DialogTitle>
             <DialogDescription>
-              Bạn có chắc chắn muốn xóa thương hiệu "{trademarkCanXoa?.tenThuongHieu}" không?
+              Bạn có chắc chắn muốn xóa hashtag "{hashtagCanXoa?.tenHashTag}" không?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex justify-end space-x-2">
             <Button variant="ghost" onClick={() => setMoModalXoa(false)} disabled={isProcessing} className="flex items-center gap-2 bg-[#e7e4f5]">
               <X className="h-4 w-4" /> Hủy
             </Button>
-            <Button onClick={anTrademark} disabled={isProcessing} className="bg-red-500 text-white hover:bg-red-600 flex items-center gap-2">
+            <Button onClick={anHashtag} disabled={isProcessing} className="bg-red-500 text-white hover:bg-red-600 flex items-center gap-2">
               {isProcessing ? "Đang xử lý..." : "Xóa"}
               <FaTrashAlt className="h-4 w-4" />
             </Button>
@@ -1029,14 +1028,14 @@ const AdminTrademark = () => {
           <DialogHeader>
             <DialogTitle>Xác Nhận Khôi Phục</DialogTitle>
             <DialogDescription>
-              Bạn có chắc chắn muốn khôi phục thương hiệu "{trademarkCanKhoiPhuc?.tenThuongHieu}" không?
+              Bạn có chắc chắn muốn khôi phục hashtag "{hashtagCanKhoiPhuc?.tenHashTag}" không?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex justify-end space-x-2">
             <Button variant="ghost" onClick={() => setMoModalKhoiPhuc(false)} disabled={isProcessing} className="flex items-center gap-2 bg-[#e7e4f5]">
               <X className="h-4 w-4" /> Hủy
             </Button>
-            <Button onClick={khoiPhucTrademark} disabled={isProcessing} className="bg-[#9b87f5] text-white hover:bg-[#8a76e3] flex items-center gap-2">
+            <Button onClick={khoiPhucHashtag} disabled={isProcessing} className="bg-[#9b87f5] text-white hover:bg-[#8a76e3] flex items-center gap-2">
               {isProcessing ? "Đang xử lý..." : "Khôi phục"}
               <FaUndo className="h-4 w-4" />
             </Button>
@@ -1049,14 +1048,14 @@ const AdminTrademark = () => {
           <DialogHeader>
             <DialogTitle>Xác Nhận Xóa Vĩnh Viễn</DialogTitle>
             <DialogDescription>
-              Bạn có chắc chắn muốn xóa vĩnh viễn thương hiệu "{trademarkCanXoaVinhVien?.tenThuongHieu}" không? Hành động này không thể hoàn tác.
+              Bạn có chắc chắn muốn xóa vĩnh viễn hashtag "{hashtagCanXoaVinhVien?.tenHashTag}" không? Hành động này không thể hoàn tác.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex justify-end space-x-2">
             <Button variant="ghost" onClick={() => setMoModalXoaVinhVien(false)} disabled={isProcessing} className="flex items-center gap-2 bg-[#e7e4f5]">
               <X className="h-4 w-4" /> Hủy
             </Button>
-            <Button onClick={xoaVinhVienTrademark} disabled={isProcessing} className="bg-red-500 text-white hover:bg-red-600 flex items-center gap-2">
+            <Button onClick={xoaVinhVienHashtag} disabled={isProcessing} className="bg-red-500 text-white hover:bg-red-600 flex items-center gap-2">
               {isProcessing ? "Đang xử lý..." : "Xóa"}
               <FaTrash className="h-4 w-4" />
             </Button>
@@ -1067,4 +1066,4 @@ const AdminTrademark = () => {
   );
 };
 
-export default AdminTrademark;
+export default AdminHashTag;
