@@ -2,8 +2,9 @@ import { Bell, Search, User, LogOut, Settings as SettingsIcon } from 'lucide-rea
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useEffect, useState } from 'react';
 
 type HeaderProps = {
   title: string;
@@ -11,7 +12,7 @@ type HeaderProps = {
 
 const Header = ({ title }: HeaderProps) => {
   const navigate = useNavigate();
-  
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
   const handleLogout = () => {
     localStorage.removeItem("adminLoggedIn");
     localStorage.removeItem("adminEmail");
@@ -20,18 +21,18 @@ const Header = ({ title }: HeaderProps) => {
 
     navigate("/auth/login");
   };
-  
+
   return (
     <header className="h-16 border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 bg-white/80 backdrop-blur-sm z-20">
       <h1 className="text-xl font-semibold">{title}</h1>
-      
+
       <div className="flex items-center gap-4">
         <div className="relative max-w-xs w-72 hidden md:block">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-          <Input 
-            type="search" 
-            placeholder="Tìm kiếm..." 
-            className="pl-8 bg-gray-100 border-0 focus-visible:ring-1 focus-visible:ring-crocus-500" 
+          <Input
+            type="search"
+            placeholder="Tìm kiếm..."
+            className="pl-8 bg-gray-100 border-0 focus-visible:ring-1 focus-visible:ring-crocus-500"
           />
         </div>
         <DropdownMenu>
@@ -80,19 +81,28 @@ const Header = ({ title }: HeaderProps) => {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
-              <span>Hồ sơ</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <SettingsIcon className="mr-2 h-4 w-4" />
-              <span>Cài đặt</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Đăng xuất</span>
-            </DropdownMenuItem>
+            {isLoggedIn && (
+              <>
+                <DropdownMenuItem>
+                  <Link to="/admin/profile" className="flex items-center">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Hồ sơ</span>
+                  </Link>
+
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Link to="/admin/settings" className="flex items-center">
+                  <SettingsIcon className="mr-2 h-4 w-4" />
+                  <span>Cài đặt</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-red-600" onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Đăng xuất</span>
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

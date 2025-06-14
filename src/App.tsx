@@ -42,6 +42,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminStaff from "./pages/admin/AdminStaff";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminInvoices from "./pages/admin/AdminInvoices";
+import AdminProfile from "./pages/admin/AdminProfile";
 
 const queryClient = new QueryClient();
 
@@ -101,6 +102,7 @@ const App = () => (
               <Route path="shipping/form" element={<ShippingForm />} />
               <Route path="orders/form" element={<OrdersForm />} />
               <Route path="invoice/form" element={<InvoiceForm />} />
+              <Route path="profile" element={<AdminProfile />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />

@@ -54,7 +54,7 @@ export const LoginForm = () => {
 
     try {
       const response = await axios.post<LoginResponse>(
-        `${import.meta.env.VITE_API_URL}/api/XacThuc/DangNhap`,
+        `${import.meta.env.VITE_API_URL}api/XacThuc/DangNhap`,
         {
           taiKhoan,
           matKhau: password,
