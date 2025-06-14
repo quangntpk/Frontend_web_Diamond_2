@@ -118,6 +118,7 @@ const GoogleCallbackHandler = () => {
 
   return null;
 };
+import AdminProfile from "./pages/admin/AdminProfile";
 
 const queryClient = new QueryClient();
 
@@ -199,6 +200,7 @@ const App = () => (
 
 
               <Route path="*" element={<NotFound />} />
+              <Route path="profile" element={<AdminProfile />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />

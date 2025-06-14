@@ -56,7 +56,7 @@ export const ProfileForm = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const response = await axios.get<UserData>(`${API_URL}/api/UpdateProfile/profile`, {
+        const response = await axios.get<UserData>(`${API_URL}api/UpdateProfile/profile`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
